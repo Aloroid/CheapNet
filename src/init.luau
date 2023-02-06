@@ -10,7 +10,7 @@
 	being filled with unnecessary bloat that is irrelevant.
 	
 	-- Functions
-	CheapNet.Open(name: string, check: <T...>(T...) -> (boolean, ...any))
+	CheapNet.new(name: string, check: <T...>(T...) -> (boolean, ...any))
 		Opens a new RemoteEvent that can be used by the developer to transmit
 		signals from the server to the client and vice-versa.
 		
@@ -45,8 +45,8 @@ export type UnifiedBridge<C..., S...> = {
 	SetOutboundMiddleware: (UnifiedBridge<C..., S...>, {Middleware}) -> (),
 	
 	-- Signal
-	OnServerReceive: Signal<S...>,
-	OnClientReceive: Signal<C...>
+	OnServerReceive: Signal<(Player, S...)>,
+	OnClientReceive: Signal<(C...)>
 	
 }
 
