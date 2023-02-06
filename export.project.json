@@ -9,7 +9,18 @@
       "$className": "ReplicatedStorage",
       
       "CheapNet": {
-        "$path": "default.project.json"
+        "$className": "ModuleScript",
+    
+        "$properties": {
+          "Source": "return require(script.CheapNet)"
+        },
+        
+        "$path": "Packages",
+        
+        "CheapNet": {
+          "$path": "src"
+          
+        }
         
       },
       
