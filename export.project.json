@@ -1,0 +1,36 @@
+{
+  "name": "CheapNet",
+  
+  "tree": {
+    
+    "$className": "DataModel",
+    
+    "ReplicatedStorage": {
+      "$className": "ReplicatedStorage",
+      
+      "CheapNet": {
+        "$path": "default.project.json"
+        
+      },
+      
+      "$path": "test/shared"
+    },
+    
+    "ServerScriptService": {
+      "Server": {
+        "$path": "test/server"
+      }
+      
+    },
+    
+    "StarterPlayer": {
+      "StarterPlayerScripts": {
+        "Client": {
+          "$path": "test/client"
+        }
+        
+      }
+    }
+    
+  }
+}
