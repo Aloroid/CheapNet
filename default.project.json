@@ -1,20 +1,7 @@
 {
-  "name": "Packages",
+  "name": "cheapnet",
   
   "tree": {
-    "$className": "ModuleScript",
-    
-    "$properties": {
-      "Source": "return require(script.CheapNet)"
-    },
-    
-    "$path": "Packages",
-    
-    "CheapNet": {
-      "$path": "src"
-      
-    }
-    
-    
+    "$path": "src"
   }
 }
