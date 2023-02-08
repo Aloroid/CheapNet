@@ -88,7 +88,6 @@ function Serializer.onSendServer()
 		end
 		
 		-- Send!
-		print("Sent it to the player")
 		Remote:FireClient(player, optimized)
 	end
 	
@@ -158,23 +157,23 @@ function Serializer.onReceiveServer(player: Player, optimized_packets)
 end
 
 function Serializer.onReceiveClient(optimized_packets)
-	print("Deserializing")
-	debug.profilebegin("CheapNet Decode Client")
 	
+	debug.profilebegin("CheapNet Decode Client")
+	local packets = 0
 	for _, local_packet_queue in optimized_packets do
 		
 		local bridge = get_bridge_from_id(local_packet_queue[1])
 		
-		
 		for i, packet in local_packet_queue do
 			if i == 1 then continue end -- That's the id
-			
+			packets += 1
 			bridge:_receive_packet_signal(packet)
 			
 		end
 	end
 	
 	debug.profileend()
+	return packets
 end
 
 

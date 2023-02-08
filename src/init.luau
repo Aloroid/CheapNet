@@ -46,7 +46,10 @@ export type UnifiedBridge<C..., S...> = {
 	
 	-- Signal
 	OnServerReceive: Signal<(Player, S...)>,
-	OnClientReceive: Signal<(C...)>
+	OnClientReceive: Signal<(C...)>,
+	
+	eachC: (UnifiedBridge<C..., S...>) -> () -> (C...),
+	eachS: (UnifiedBridge<C..., S...>) -> () -> (Player, S...),
 	
 }
 
@@ -65,25 +68,56 @@ function CheapNet.new<S..., C...>(bridge: string, server_test: ((S...) -> (boole
 	
 end
 
+local frame = 0
+local initial_frame = 0
 RunService.Heartbeat:Connect(function(delta_time)
 	
-	-- Clear up all the existing packets
-	for _, bridge in sharedState.bridges do
-		bridge._packets = {}
-	end
+	frame += 1
 	
+	-- Clear up all the existing packets
 	if RunService:IsServer() then
+		debug.profilebegin("CheapNet Server")
 		Serializer.onSendServer()
 	else
+		debug.profilebegin("CheapNet Client")
 		Serializer.onSendClient()
 	end
-	
+	debug.profileend()
 end)
 
 if RunService:IsClient() then
-	script.Remote.OnClientEvent:Connect(Serializer.onReceiveClient)
+	script.Remote.OnClientEvent:Connect(function(...)
+		
+		debug.profilebegin("CheapNet Client")
+		if frame ~= initial_frame then
+			for _, bridge in sharedState.bridges do
+				bridge._packets = {}
+			end
+			initial_frame = frame
+		end
+		
+		local start = os.clock()
+		local total = Serializer.onReceiveClient(...)
+		local finish = os.clock()
+		
+		debug.profileend()
+		
+		print(math.floor((finish - start) * 10000000) / 10, "μs", "processed", total)
+	end)
 else
-	script.Remote.OnServerEvent:Connect(Serializer.onReceiveServer)
+	
+	script.Remote.OnServerEvent:Connect(function(...)
+		debug.profilebegin("CheapNet Server")
+		if frame ~= initial_frame then
+			for _, bridge in sharedState.bridges do
+				bridge._packets = {}
+			end
+			initial_frame = frame
+		end
+		
+		Serializer.onReceiveServer(...)
+		debug.profileend()
+	end)
 end
 
 return CheapNet

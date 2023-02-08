@@ -26,7 +26,7 @@ export type ClientBridge<S..., R...> = {
 	OnClientEvent: RBXScriptSignal<R...>,
 	
 	-- Iterates through all the packets that have been received last frame.
-	each: (ClientBridge<S..., R...>) -> () -> (R...)
+	eachC: (ClientBridge<S..., R...>) -> () -> (R...)
 	
 }
 
@@ -104,7 +104,7 @@ function ClientBridge:FireServer(...)
 	
 end
 
-function ClientBridge:each()
+function ClientBridge:eachC()
 	
 	local i = 0
 	
@@ -113,7 +113,7 @@ function ClientBridge:each()
 		local packet = self._packets[i]
 		
 		if packet then
-			return unpack(packet)
+			return i, unpack(packet)
 		else
 			return nil
 		end
@@ -131,10 +131,18 @@ function ClientBridge:_receive_packet_signal(packet)
 	end
 	
 	-- Run the filter
-	assert(self._filter(unpack(transformed)))
+	local success, reasoning = self._filter(unpack(transformed, 2))
+	
+	if success ~= true then
+		warn(reasoning or "Unknown packet")
+		return
+	end
 	
 	table.insert(self._packets, transformed)
-	self.OnClientReceive:Fire(unpack(transformed))
+	
+	if self.OnClientReceive._handlerListHead ~= false then
+		self.OnClientReceive:Fire(unpack(transformed))
+	end
 	
 end
 

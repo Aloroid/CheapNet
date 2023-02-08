@@ -31,7 +31,7 @@ export type ServerBridge<S..., R...> = {
 	OnServerEvent: Signal<R...>,
 	
 	-- Iterates through all the packets that have been received last frame.
-	each: (ServerBridge<S..., R...>) -> () -> (Player, R...)
+	eachS: (ServerBridge<S..., R...>) -> () -> (Player, R...)
 	
 }
 
@@ -109,7 +109,7 @@ function ServerBridge:FireAllClients(...)
 	return self:FireToClients(...):include(Players:GetPlayers())
 end
 
-function ServerBridge:each()
+function ServerBridge:eachS()
 	
 	local i = 0
 	
@@ -118,7 +118,7 @@ function ServerBridge:each()
 		local packet = self._packets[i]
 		
 		if packet then
-			return unpack(packet)
+			return i,unpack(packet)
 		else
 			return nil
 		end
@@ -136,10 +136,18 @@ function ServerBridge:_receive_packet_signal(packet)
 	end
 	
 	-- Run the filter
-	assert(self._filter(unpack(transformed, 2)))
+	local success, reasoning = self._filter(unpack(transformed, 2))
+	
+	if success ~= true then
+		warn(reasoning or "Unknown packet from", transformed[1])
+		return
+	end
 	
 	table.insert(self._packets, transformed)
-	self.OnServerReceive:Fire(unpack(transformed))
+	
+	if self.OnServerReceive._handlerListHead ~= false then
+		self.OnServerReceive:Fire(unpack(transformed))
+	end
 	
 end
 
