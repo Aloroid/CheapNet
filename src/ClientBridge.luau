@@ -131,7 +131,7 @@ function ClientBridge:_receive_packet_signal(packet)
 	end
 	
 	-- Run the filter
-	local success, reasoning = self._filter(unpack(transformed, 2))
+	local success, reasoning = self._filter(unpack(transformed))
 	
 	if success ~= true then
 		warn(reasoning or "Unknown packet")
