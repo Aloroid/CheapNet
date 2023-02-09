@@ -29,7 +29,7 @@ end
 
 local is_player = t.union(t.array(t.instance("Player")), t.instance("Player"))
 function PacketFilterable:include(players: {Player} | Player)
-	assert(is_player(players))
+	if is_player(players) == false then return self end
 	
 	if typeof(players) == "Instance" then
 		players = {players}
@@ -45,7 +45,7 @@ function PacketFilterable:include(players: {Player} | Player)
 end
 
 function PacketFilterable:exclude(players: {Player} | Player)
-	assert(is_player(players))
+	if is_player(players) == false then return self end
 	
 	if typeof(players) == "Instance" then
 		players = {players}
