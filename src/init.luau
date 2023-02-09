@@ -48,8 +48,8 @@ export type UnifiedBridge<C..., S...> = {
 	OnServerReceive: Signal<(Player, S...)>,
 	OnClientReceive: Signal<(C...)>,
 	
-	eachC: (UnifiedBridge<C..., S...>) -> () -> (C...),
-	eachS: (UnifiedBridge<C..., S...>) -> () -> (Player, S...),
+	eachC: (UnifiedBridge<C..., S...>) -> () -> (number, C...),
+	eachS: (UnifiedBridge<C..., S...>) -> () -> (number, Player, S...),
 	
 }
 
