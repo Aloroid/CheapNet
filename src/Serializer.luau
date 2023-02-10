@@ -31,7 +31,7 @@ end
 local cache = {}
 local function get_bridge_from_id(id: string)
 	
-	if cache[id] then return cache[id] end
+	if cache[id] then return cache[id], cache[id].Id end
 	
 	local total_links = #Links:GetChildren()
 	local total_characters = if total_links > 255 then 2 else 1
@@ -39,7 +39,7 @@ local function get_bridge_from_id(id: string)
 	local unpacked = string.unpack("I"..total_characters, id)
 	cache[id] = sharedState.identifiers[unpacked]
 	
-	return sharedState.identifiers[unpacked]
+	return sharedState.identifiers[unpacked], id
 	
 end
 
@@ -142,7 +142,12 @@ function Serializer.onReceiveServer(player: Player, optimized_packets)
 	
 	for _, local_packet_queue in optimized_packets do
 		
-		local bridge = get_bridge_from_id(local_packet_queue[1])
+		local bridge, id = get_bridge_from_id(local_packet_queue[1])
+		
+		if bridge == nil then
+			warn(`Received unknown packet on Bridge #{id};`)
+			continue
+		end
 		
 		for i, packet in local_packet_queue do
 			if i == 1 then continue end -- That's the id
@@ -162,7 +167,12 @@ function Serializer.onReceiveClient(optimized_packets)
 	local packets = 0
 	for _, local_packet_queue in optimized_packets do
 		
-		local bridge = get_bridge_from_id(local_packet_queue[1])
+		local bridge, id = get_bridge_from_id(local_packet_queue[1])
+		
+		if bridge == nil then
+			warn(`Received unknown packet on Bridge #{id};`)
+			continue
+		end
 		
 		for i, packet in local_packet_queue do
 			if i == 1 then continue end -- That's the id
