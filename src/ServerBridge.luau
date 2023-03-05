@@ -139,7 +139,7 @@ function ServerBridge:_receive_packet_signal(packet)
 	local success, reasoning = self._filter(unpack(transformed, 2))
 	
 	if success ~= true then
-		warn(reasoning or "Unknown packet from", transformed[1])
+		warn(`Invalid packet on {self._name} because "{reasoning}" from {packet[1]}`)
 		return
 	end
 	

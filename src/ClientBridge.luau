@@ -134,7 +134,7 @@ function ClientBridge:_receive_packet_signal(packet)
 	local success, reasoning = self._filter(unpack(transformed))
 	
 	if success ~= true then
-		warn(reasoning or "Unknown packet")
+		warn(`Invalid packet on {self._name} because "{reasoning}"`)
 		return
 	end
 	
