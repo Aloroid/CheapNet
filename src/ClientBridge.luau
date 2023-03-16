@@ -8,6 +8,7 @@ local Packages = script.Parent.Parent
 local t = require(Packages.t)
 local Signal = require(Packages.Signal)
 local sharedState = require(script.Parent.sharedState)
+local Identifier = require(script.Parent.Identifier)
 
 type Signal<T...> = sharedState.Signal<T...>
 type Middleware = (...any) -> (...any)
@@ -21,6 +22,10 @@ export type ClientBridge<S..., R...> = {
 	-- Middleware
 	SetInboundMiddleware: (ClientBridge<S..., R...>, {Middleware}) -> (),
 	SetOutboundMiddleware: (ClientBridge<S..., R...>, {Middleware}) -> (),
+	
+	-- Identifier
+	FromLocalIdentifier: (ClientBridge<S..., R...>, identifier: string) -> string,
+	GetLocalIdentifier: (ClientBridge<S..., R...>, value: string) -> string,
 	
 	-- RBXScriptSignal Implementation
 	OnClientEvent: RBXScriptSignal<R...>,
@@ -47,6 +52,7 @@ function ClientBridge.new<S..., R...>(name: string, filter: ((R...) -> (boolean,
 		Id = 0/0,
 		
 		_name = name,
+		_processed = false,
 		_packets = {},
 		_filter = actual_filter,
 		_inbound_middleware = {},
@@ -107,6 +113,7 @@ end
 function ClientBridge:eachC()
 	
 	local i = 0
+	self._processed = true
 	
 	return function()
 		i += 1
@@ -121,6 +128,15 @@ function ClientBridge:eachC()
 	end
 	
 end
+
+function ClientBridge:FromLocalIdentifier(identifier: string)
+	return Identifier.fromLocalIdentifier(self._name, identifier)
+end
+
+function ClientBridge:GetLocalIdentifier(value: any)
+	return Identifier.getLocalIdentifier(self._name, value)
+end
+
 
 function ClientBridge:_receive_packet_signal(packet)
 	

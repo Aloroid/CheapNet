@@ -1,4 +1,4 @@
-local CheapNet = require(script.Parent.CheapNet)
+local CheapNet = require(script.Parent.Packages.CheapNet)
 
 local function a(b: Vector3)
 	return true

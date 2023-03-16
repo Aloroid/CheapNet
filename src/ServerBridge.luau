@@ -11,6 +11,7 @@ local t = require(Packages.t)
 local Signal = require(Packages.Signal)
 local PacketFilterable = require(script.Parent.PacketFilterable)
 local sharedState = require(script.Parent.sharedState)
+local Identifier = require(script.Parent.Identifier)
 
 type Signal<T...> = sharedState.Signal<T...>
 type Middleware = (...any) -> (...any)
@@ -26,6 +27,10 @@ export type ServerBridge<S..., R...> = {
 	-- Middleware
 	SetInboundMiddleware: (ServerBridge<S..., R...>, {Middleware}) -> (),
 	SetOutboundMiddleware: (ServerBridge<S..., R...>, {Middleware}) -> (),
+	
+	-- Identifier
+	FromLocalIdentifier: (ServerBridge<S..., R...>, identifier: string) -> string,
+	GetLocalIdentifier: (ServerBridge<S..., R...>, value: string) -> string,
 	
 	-- RBXScriptSignal Implementation
 	OnServerEvent: Signal<R...>,
@@ -78,19 +83,6 @@ function ServerBridge.new<S..., R...>(name: string, filter: ((R...) -> (boolean,
 	
 end
 
-local is_middleware = t.array(t.callback)
-function ServerBridge:SetInboundMiddleware(middleware)
-	assert(is_middleware(middleware))
-	self._inbound_middleware = middleware
-	
-end
-
-function ServerBridge:SetOutboundMiddleware(middleware)
-	assert(is_middleware(middleware))
-	self._outbound_middleware = middleware
-	
-end
-
 function ServerBridge:FireToClients(...)
 	local packet_filterable = PacketFilterable.new()
 	
@@ -107,6 +99,28 @@ end
 
 function ServerBridge:FireAllClients(...)
 	return self:FireToClients(...):include(Players:GetPlayers())
+end
+
+
+local is_middleware = t.array(t.callback)
+function ServerBridge:SetInboundMiddleware(middleware)
+	assert(is_middleware(middleware))
+	self._inbound_middleware = middleware
+	
+end
+
+function ServerBridge:SetOutboundMiddleware(middleware)
+	assert(is_middleware(middleware))
+	self._outbound_middleware = middleware
+	
+end
+
+function ServerBridge:FromLocalIdentifier(identifier: string)
+	return Identifier.fromLocalIdentifier(self._name, identifier)
+end
+
+function ServerBridge:GetLocalIdentifier(value: any)
+	return Identifier.getLocalIdentifier(self._name, value)
 end
 
 function ServerBridge:eachS()

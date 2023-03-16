@@ -39,7 +39,7 @@ local function get_bridge_from_id(id: string)
 	local unpacked = string.unpack("I"..total_characters, id)
 	cache[id] = sharedState.identifiers[unpacked]
 	
-	return sharedState.identifiers[unpacked], id
+	return sharedState.identifiers[unpacked], unpacked
 	
 end
 
@@ -170,7 +170,7 @@ function Serializer.onReceiveClient(optimized_packets)
 		local bridge, id = get_bridge_from_id(local_packet_queue[1])
 		
 		if bridge == nil then
-			warn(`Received unknown packet on Bridge #{id};`)
+			warn(`Received unknown packet on Bridge #{string.unpack("B", id)};`)
 			continue
 		end
 		

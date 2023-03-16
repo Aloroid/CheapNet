@@ -27,9 +27,10 @@ local RunService = game:GetService("RunService")
 local Serializer = require(script.Serializer)
 local PacketFilterable = require(script.PacketFilterable)
 local sharedState = require(script.sharedState)
+local Identifier = require(script.Identifier)
 
 export type PacketFilterable = PacketFilterable.PacketFilterable
-type Middleware = (player: Player, ...any) -> ...any
+type Middleware = (...any) -> ...any
 type Connection = {Disconnect: (Connection)}
 type Signal<T...> = sharedState.Signal<T...>
 
@@ -43,6 +44,12 @@ export type UnifiedBridge<C..., S...> = {
 	
 	SetInboundMiddleware: (UnifiedBridge<C..., S...>, {Middleware}) -> (),
 	SetOutboundMiddleware: (UnifiedBridge<C..., S...>, {Middleware}) -> (),
+	
+	getProcessingPlayer: (UnifiedBridge<C..., S...>) -> Player,
+	
+	-- Identifier
+	FromLocalIdentifier: (UnifiedBridge<C..., S...>, identifier: string) -> string,
+	GetLocalIdentifier: (UnifiedBridge<C..., S...>, value: string) -> string,
 	
 	-- Signal
 	OnServerReceive: Signal<(Player, S...)>,
@@ -66,6 +73,14 @@ function CheapNet.new<S..., C...>(bridge: string, server_test: ((S...) -> (boole
 		
 	end
 	
+end
+
+function CheapNet.FromGlobalIdentifier(identifier: string): any
+	return Identifier.fromLocalIdentifier(script, identifier)
+end
+
+function CheapNet.GetGlobalIdentifier(value: string): string
+	return Identifier.getLocalIdentifier(script, value)
 end
 
 RunService.Heartbeat:Connect(function(delta_time)
