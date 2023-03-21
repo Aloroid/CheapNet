@@ -2,7 +2,7 @@
 name = "aloroid/cheapnet"
 description = "A cheap networking library designed for safety."
 license = "MIT"
-version = "0.3.1"
+version = "0.3.2"
 registry = "https://github.com/UpliftGames/wally-index"
 realm = "shared"
 include = ["default.project.json", "LICENSE", "src"]

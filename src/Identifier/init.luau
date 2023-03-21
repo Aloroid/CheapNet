@@ -40,7 +40,7 @@ function Identifier.getLocalIdentifier(group, value)
 		local identifier = valuesToIdentifiers[group][value]
 		
 		if identifier == nil then
-			local rawId = totalIdentifiers[group] or 0 + 1
+			local rawId = (totalIdentifiers[group] or 0) + 1
 			local id = string.pack(packing, rawId)
 			
 			totalIdentifiers[group] = rawId
