@@ -19,21 +19,13 @@ local Identifier = {}
 -- inside it.
 local AUTOCREATETABLE = {
 	__index = function(t, k)
-		local v = rawget(t, k)
-		if v == nil then
-			v = {}
-			t[k] = v
-			task.defer(function()
-				if next(v) == nil then
-					t[k] = nil
-				end
-			end)
-		end
-		return v
+		t[k] = {}
+		return t[k]
 	end
 }
 local identifiersToValues = setmetatable({}, AUTOCREATETABLE)
 local valuesToIdentifiers = setmetatable({}, AUTOCREATETABLE)
+local totalIdentifiers = {}
 local sendToClients = {}
 local initialized = {}
 
@@ -48,8 +40,10 @@ function Identifier.getLocalIdentifier(group, value)
 		local identifier = valuesToIdentifiers[group][value]
 		
 		if identifier == nil then
-			local id = string.pack(packing, #identifiersToValues[group] + 1)
+			local rawId = totalIdentifiers[group] or 0 + 1
+			local id = string.pack(packing, rawId)
 			
+			totalIdentifiers[group] = rawId
 			identifiersToValues[group][id] = value
 			valuesToIdentifiers[group][value] = id
 			
