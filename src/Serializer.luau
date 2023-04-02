@@ -6,11 +6,11 @@
 
 local sharedState = require(script.Parent.sharedState)
 local PacketFilterable = require(script.Parent.PacketFilterable)
+local efficientPackInt = require(script.Parent.efficientPackInt)
 local t = require(script.Parent.Parent.t)
 
 local Serializer = {}
 
-local Links = script.Parent.Links
 local Remote = script.Parent.Remote
 
 type Packet = {
@@ -20,12 +20,7 @@ type Packet = {
 }
 
 local function get_bridge_id(id: number)
-	
-	local total_links = #Links:GetChildren()
-	local total_characters = if total_links > 255 then 2 else 1
-	
-	return string.pack("I"..total_characters, id)
-	
+	return efficientPackInt.pack(id, true)
 end
 
 local cache = {}
@@ -33,10 +28,7 @@ local function get_bridge_from_id(id: string)
 	
 	if cache[id] then return cache[id], cache[id].Id end
 	
-	local total_links = #Links:GetChildren()
-	local total_characters = if total_links > 255 then 2 else 1
-	
-	local unpacked = string.unpack("I"..total_characters, id)
+	local unpacked = efficientPackInt.unpack(id, true)
 	cache[id] = sharedState.identifiers[unpacked]
 	
 	return sharedState.identifiers[unpacked], unpacked

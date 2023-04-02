@@ -6,11 +6,10 @@
 	
 ]]
 
-local BYTES = 2
-local packing = `I{BYTES}`
-
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
+
+local efficientPackInt = require(script.Parent.efficientPackInt)
 
 local Identifier = {}
 
@@ -41,7 +40,7 @@ function Identifier.getLocalIdentifier(group, value)
 		
 		if identifier == nil then
 			local rawId = (totalIdentifiers[group] or 0) + 1
-			local id = string.pack(packing, rawId)
+			local id = efficientPackInt.pack(rawId, true)
 			
 			totalIdentifiers[group] = rawId
 			identifiersToValues[group][id] = value
@@ -87,7 +86,7 @@ else
 		valuesToIdentifiers[group][value] = id
 	end
 	
-	script.Add.OnClientEvent:Connect(function(group: string, id: number, value: any)
+	script.Add.OnClientEvent:Connect(function(group: string, id: string, value: any)
 		identifiersToValues[group][id] = value
 		valuesToIdentifiers[group][value] = id
 		
