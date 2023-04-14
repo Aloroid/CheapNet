@@ -45,8 +45,6 @@ export type UnifiedBridge<C..., S...> = {
 	SetInboundMiddleware: (UnifiedBridge<C..., S...>, {Middleware}) -> (),
 	SetOutboundMiddleware: (UnifiedBridge<C..., S...>, {Middleware}) -> (),
 	
-	getProcessingPlayer: (UnifiedBridge<C..., S...>) -> Player,
-	
 	-- Identifier
 	FromLocalIdentifier: (UnifiedBridge<C..., S...>, identifier: string) -> string,
 	GetLocalIdentifier: (UnifiedBridge<C..., S...>, value: string) -> string,
@@ -83,7 +81,9 @@ function CheapNet.GetGlobalIdentifier(value: string): string
 	return Identifier.getLocalIdentifier(script, value)
 end
 
-RunService.Heartbeat:Connect(function(delta_time)
+local processingPacket = {}
+
+RunService.PostSimulation:Connect(function(delta_time)
 	
 	for _, bridge in sharedState.bridges do
 		bridge._packets = {}
@@ -93,33 +93,34 @@ RunService.Heartbeat:Connect(function(delta_time)
 	if RunService:IsServer() then
 		debug.profilebegin("CheapNet Server")
 		Serializer.onSendServer()
+		for player, packet in processingPacket do
+			Serializer.onReceiveServer(player, packet)
+		end
+		processingPacket = {}
 	else
 		debug.profilebegin("CheapNet Client")
 		Serializer.onSendClient()
+		Serializer.onReceiveClient(processingPacket)
 	end
+	
+	processingPacket = {}
+	
 	debug.profileend()
 end)
 
 if RunService:IsClient() then
-	script.Remote.OnClientEvent:Connect(function(...)
-		
-		debug.profilebegin("CheapNet Client")
-		
-		local start = os.clock()
-		local total = Serializer.onReceiveClient(...)
-		local finish = os.clock()
-		
-		debug.profileend()
-		
-		--print(math.floor((finish - start) * 10000000) / 10, "μs", "processed", total)
+	script.Remote.OnClientEvent:Connect(function(packet)
+		for _, queue in packet do
+			table.insert(processingPacket, queue)
+		end
 	end)
 else
 	
-	script.Remote.OnServerEvent:Connect(function(...)
-		debug.profilebegin("CheapNet Server")
-		
-		Serializer.onReceiveServer(...)
-		debug.profileend()
+	script.Remote.OnServerEvent:Connect(function(player, packet)
+		processingPacket[player] = processingPacket[player] or {}
+		for _, queue in packet do
+			table.insert(processingPacket[player], queue)
+		end
 	end)
 end
 
