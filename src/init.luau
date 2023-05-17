@@ -83,7 +83,7 @@ end
 
 local processingPacket = {}
 
-RunService.PostSimulation:Connect(function(delta_time)
+RunService.Stepped:Connect(function()
 	
 	for _, bridge in sharedState.bridges do
 		bridge._packets = {}
