@@ -1,4 +1,43 @@
-# Unreleased
+# 0.4
+
+## Added
+- Added Leaky Buckets
+- Added before and after runtime typecheck tests
+	> Tests run on both server and client including when you fire.
+	> These runtime typecheck tests now prevent both developer error and
+	> exploiters sending bad packets.
+## Improvements
+- Improved Types
+- Improved Middleware Error Messaging
+- Middleware is now safely called.
+	> When middleware fails, packets are dropped. Yielding may cause unexpected
+	> behavior.
+	
+# 0.3.3
+
+## Improvements
+- Implemented Efficient Integer Packing
+	> Integers are now packed as efficiently as possible.
+	> Bridges and Identifiers now support more than 65536 Ids.
+
+# 0.3.2
+
+## Fixes
+- Fixed a bug with identifiers
+
+# 0.3.1
+
+## Fixes
+- Fixed a bug with multiple identifiers
+
+# 0.3
+
+## Added
+- Added Identifiers
+- Added `Bridge:GetLocalIdentifier` and `Bridge:FromLocalIdentifier`
+- Added `CheapNet:GetGlobalIdentifier` and `CheapNet:FromGlobalIdentifier`
+
+# 0.2
 
 ## Added
 - Added `ClientBridge:eachC` and `ServerBridge:eachS`
