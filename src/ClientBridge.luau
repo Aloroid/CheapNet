@@ -122,7 +122,7 @@ function ClientBridge:FireServer(...)
 	end
 
 	-- processes the packet through middleware
-	for index, middleware: Middleware in self._inbound_middleware do
+	for index, middleware: Middleware in self._outbound_middleware do
 		local thread = cached_middleware_threads[middleware]
 
 		-- create a new thread to disallow yielding and such.
