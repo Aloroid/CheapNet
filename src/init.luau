@@ -9,11 +9,13 @@ local RunService = game:GetService("RunService")
 
 local Serializer = require(script.Serializer)
 local PacketFilterable = require(script.PacketFilterable)
-local sharedState = require(script.sharedState)
+local sharedState = require(script.SharedState)
 local LeakyBucket = require(script.LeakyBucket)
 local Identifier = require(script.Identifier)
+local EfficientPackInt = require(script.EfficientPackInt)
 
 export type PacketFilterable = PacketFilterable.PacketFilterable
+export type LeakyBucket = LeakyBucket.LeakyBucket
 type Middleware<T... = ...any> = (T...) -> ...any
 type Connection = { Disconnect: Connection }
 type Signal<T...> = sharedState.Signal<T...>
@@ -37,8 +39,8 @@ export type UnifiedBridge<T..., U...> = {
 	OnServerReceive: Signal<(Player, U...)>,
 	OnClientReceive: Signal<T...>,
 
-	eachC: (UnifiedBridge<T..., U...>) -> () -> (number, U...),
-	eachS: (UnifiedBridge<T..., U...>) -> () -> (number, Player, U...),
+	eachC: (UnifiedBridge<T..., U...>, discriminator: string | number?) -> () -> (number, U...),
+	eachS: (UnifiedBridge<T..., U...>, discriminator: string | number?) -> () -> (number, Player, U...),
 }
 
 local CheapNet = {}
@@ -47,7 +49,7 @@ CheapNet.LeakyBucket = LeakyBucket
 
 -- the before_middleware test exists so you can confirm the packet the client
 -- has sent is valid. the after_middleware test exists so that you don't mess
--- up. ndee
+-- up
 function CheapNet.new(bridge, before_middleware_test, after_middleware_test)
 	if RunService:IsServer() then
 		local ServerBridge = require(script.ServerBridge)
@@ -66,44 +68,29 @@ function CheapNet.GetGlobalIdentifier(value)
 	return Identifier.getLocalIdentifier(script, value)
 end
 
-local processingPacket = {}
+CheapNet.pack = EfficientPackInt.pack
+CheapNet.unpack = EfficientPackInt.unpack
 
-RunService.Stepped:Connect(function()
-	for _, bridge in sharedState.bridges do
-		bridge._packets = {}
-	end
-
+RunService.Heartbeat:Connect(function()
 	-- Clear up all the existing packets
 	if RunService:IsServer() then
 		debug.profilebegin("CheapNet Server")
 		Serializer.onSendServer()
-		for player, packet in processingPacket do
-			Serializer.onReceiveServer(player, packet)
-		end
-		processingPacket = {}
 	else
 		debug.profilebegin("CheapNet Client")
 		Serializer.onSendClient()
-		Serializer.onReceiveClient(processingPacket)
 	end
-
-	processingPacket = {}
 
 	debug.profileend()
 end)
 
 if RunService:IsClient() then
 	script.Remote.OnClientEvent:Connect(function(packet)
-		for _, queue in packet do
-			table.insert(processingPacket, queue)
-		end
+		Serializer.onReceiveClient(packet)
 	end)
 else
 	script.Remote.OnServerEvent:Connect(function(player, packet)
-		processingPacket[player] = processingPacket[player] or {}
-		for _, queue in packet do
-			table.insert(processingPacket[player], queue)
-		end
+		Serializer.onReceiveServer(player, packet)
 	end)
 end
 
@@ -121,4 +108,7 @@ return CheapNet :: {
 	GetGlobalIdentifier: (value: unknown) -> string,
 
 	LeakyBucket: typeof(LeakyBucket),
+
+	pack: (value: number) -> string,
+	unpack: (value: string) -> number,
 }

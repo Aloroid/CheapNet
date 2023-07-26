@@ -9,8 +9,9 @@ RunService.Heartbeat:Connect(function()
 	Remotes.luanoid_spawn:FireServer("hi")
 	--print("Iterating", #Remotes.luanoid_move._packets)
 
-	for _, value, identifier, localIdentifier in Remotes.luanoid_move:eachC() do
+	for i, value, identifier, localIdentifier in Remotes.luanoid_move:eachC() do
 		print(
+			i,
 			value,
 			CheapNet.FromGlobalIdentifier(identifier),
 			Remotes.luanoid_move:FromLocalIdentifier(localIdentifier)

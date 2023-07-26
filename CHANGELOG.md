@@ -1,4 +1,17 @@
-# 0.4
+# 0.4.2
+
+## Added
+- Added `CheapNet.pack` and `CheapNet.unpack`
+- Exported types for `LeakyBucket`
+
+## Improvements
+- Improved reliability of `:eachC` and `:eachS`
+	> Note: Calls are required as otherwise, you'll produce a memory leak since
+	> the packets will not be cleared. Packets are only cleared every `:each`
+	> call and will iterate over the packets that have been sent between `:each`
+	> calls. This stops potentially missing packets.
+
+# 0.4.0
 
 ## Added
 - Added Leaky Buckets

@@ -11,7 +11,8 @@ local t = require(Packages.t)
 local Signal = require(Packages.Signal)
 local PacketFilterable = require(script.Parent.PacketFilterable)
 local Identifier = require(script.Parent.Identifier)
-local sharedState = require(script.Parent.sharedState)
+local sharedState = require(script.Parent.SharedState)
+local CallIdentifier = require(script.Parent.CallIdentifier)
 
 type Signal<T...> = sharedState.Signal<T...>
 type Middleware = (...any) -> ...any
@@ -68,7 +69,7 @@ function ServerBridge.new<S..., R...>(
 		Id = Id,
 
 		_name = name,
-		_packets = {},
+		_packets = { [""] = {} },
 		_inbound_middleware = {},
 		_outbound_middleware = {},
 		_before_filter = before_filter,
@@ -171,16 +172,21 @@ function ServerBridge:GetLocalIdentifier(value: any)
 	return Identifier.getLocalIdentifier(self._name, value)
 end
 
-function ServerBridge:eachS()
+function ServerBridge:eachS(discriminator: number | string?)
 	local i = 0
+
+	local key = CallIdentifier(self.Id, discriminator)
+	local packets = self._packets[key] or self._packets[""]
+	self._packets[key] = self._packets[key] or {}
 
 	return function()
 		i += 1
-		local packet = self._packets[i]
+		local packet = packets[i]
 
 		if packet then
 			return i, unpack(packet)
 		else
+			table.clear(packets)
 			return nil
 		end
 	end
@@ -235,7 +241,9 @@ function ServerBridge:_receive_packet_signal(packet)
 		end
 	end
 
-	table.insert(self._packets, transformed)
+	for identifier, packets in self._packets do
+		table.insert(packets, transformed)
+	end
 
 	if self.OnServerReceive._handlerListHead ~= false then
 		self.OnServerReceive:Fire(unpack(transformed))

@@ -7,8 +7,9 @@ local Packages = script.Parent.Parent
 
 local t = require(Packages.t)
 local Signal = require(Packages.Signal)
-local sharedState = require(script.Parent.sharedState)
+local sharedState = require(script.Parent.SharedState)
 local Identifier = require(script.Parent.Identifier)
+local CallIdentifier = require(script.Parent.CallIdentifier)
 
 type Signal<T...> = sharedState.Signal<T...>
 type Middleware = (...any) -> ...any
@@ -63,9 +64,10 @@ function ClientBridge.new<S..., R...>(
 
 		_name = name,
 		_processed = false,
-		_packets = {},
+		_packets = { [""] = {} },
 		_inbound_middleware = {},
 		_outbound_middleware = {},
+		_cached = {},
 
 		_before_filter = before_filter,
 		_after_filter = after_filter,
@@ -160,17 +162,22 @@ function ClientBridge:FireServer(...)
 	table.insert(sharedState.queue, { id = self.Id, packet = transformed })
 end
 
-function ClientBridge:eachC()
+function ClientBridge:eachC(discriminator: string | number?)
 	local i = 0
 	self._processed = true
 
+	local key = CallIdentifier(self.Id, discriminator)
+	local packets = self._packets[key] or self._packets[""]
+	self._packets[key] = self._packets[key] or {}
+
 	return function()
 		i += 1
-		local packet = self._packets[i]
+		local packet = packets[i]
 
 		if packet then
 			return i, unpack(packet)
 		else
+			table.clear(packets)
 			return nil
 		end
 	end
@@ -228,7 +235,9 @@ function ClientBridge:_receive_packet_signal(packet)
 		return
 	end
 
-	table.insert(self._packets, transformed)
+	for identifier, packets in self._packets do
+		table.insert(packets, transformed)
+	end
 
 	if self.OnClientReceive._handlerListHead ~= false then
 		self.OnClientReceive:Fire(unpack(transformed))

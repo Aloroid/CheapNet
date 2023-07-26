@@ -5,7 +5,7 @@ local Players = game:GetService("Players")
 	
 ]]
 
-local sharedState = require(script.Parent.sharedState)
+local sharedState = require(script.Parent.SharedState)
 local PacketFilterable = require(script.Parent.PacketFilterable)
 local efficientPackInt = require(script.Parent.EfficientPackInt)
 local LeakyBucket = require(script.Parent.LeakyBucket)

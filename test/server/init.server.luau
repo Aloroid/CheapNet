@@ -18,12 +18,14 @@ RunService.Heartbeat:Connect(function()
 end)
 
 local t = { 3, 2 }
+local i = 0
 while task.wait() do
 	--print("Fired")
+	i += 1
 
-	for i = 1, 1 do
+	for _ = 1, 1 do
 		Remotes.luanoid_move:FireAllClients(
-			"rgoiaj",
+			i,
 			CheapNet.GetGlobalIdentifier("true"),
 			Remotes.luanoid_move:GetLocalIdentifier(t)
 		)
