@@ -167,8 +167,12 @@ function ClientBridge:eachC(discriminator: string | number?)
 	self._processed = true
 
 	local key = CallIdentifier(self.Id, discriminator)
-	local packets = self._packets[key] or self._packets[""]
-	self._packets[key] = self._packets[key] or {}
+	local packets = self._packets[key] or self._packets[""] or {}
+
+	if self._packets[""] then
+		self._packets[key] = self._packets[""]
+		self._packets[""] = nil
+	end
 
 	return function()
 		i += 1

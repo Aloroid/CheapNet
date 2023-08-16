@@ -1,3 +1,8 @@
+# 0.4.3
+
+## Fixes
+- Fixed a memory leak
+
 # 0.4.2
 
 ## Added
