@@ -1,114 +1,68 @@
---!nocheck
 --[[
-	CheapNet is a networking library designed for running networking code at a
-	low performance cost while having the capabilities to be incredibly safe,
-	encouraging the user to leverage typechecking and more.
+
+	CheapNet is a networking library designed quickly.
+
 ]]
 
 local RunService = game:GetService("RunService")
 
-local Serializer = require(script.Serializer)
-local PacketFilterable = require(script.PacketFilterable)
-local sharedState = require(script.SharedState)
-local LeakyBucket = require(script.LeakyBucket)
-local Identifier = require(script.Identifier)
-local EfficientPackInt = require(script.EfficientPackInt)
+local client_bridge = require(script.client_event_bridge)
+local efficient_pack_int = require(script.efficient_pack_int)
+local filterable = require(script.filterable)
+local get_identifier_namespace = require(script.get_identifier_namespace)
+local identifier_create = require(script.identifier_create)
+local identifier_get = require(script.identifier_get)
+local leaky_bucket = require(script.leaky_bucket)
+local packet_decoder = require(script.packet_decoder)
+local packet_encoder = require(script.packet_encoder)
+local server_bridge = require(script.server_event_bridge)
+local signal = require(script.signal)
+local timestamps = require(script.timestamps)
 
-export type PacketFilterable = PacketFilterable.PacketFilterable
-export type LeakyBucket = LeakyBucket.LeakyBucket
-type Middleware<T... = ...any> = (T...) -> ...any
-type Connection = { Disconnect: Connection }
-type Signal<T...> = sharedState.Signal<T...>
-type RuntimeTypecheck<T...> = (T...) -> (boolean, string?)
-export type UnifiedBridge<T..., U...> = {
+type Signal<T...> = signal.Signal<T...>
+type behavior = "ordered" | "unordered" | "unreliable" | "unreliable_drop_old_packets"
+export type Filterable = filterable.Filterable
+export type Event<T...> = {
 
-	Id: number,
+	id: number,
+	behavior: behavior,
 
-	FireToClients: (UnifiedBridge<T..., U...>, U...) -> PacketFilterable,
-	FireAllClients: (UnifiedBridge<T..., U...>, U...) -> PacketFilterable,
-	FireServer: (UnifiedBridge<T..., U...>, U...) -> (),
+	on_client_event: Signal<T...>,
+	on_server_event: Signal<(Player, T...)>,
 
-	SetInboundMiddleware: (UnifiedBridge<T..., U...>, { Middleware }) -> (),
-	SetOutboundMiddleware: (UnifiedBridge<T..., U...>, { Middleware }) -> (),
-
-	-- Identifier
-	FromLocalIdentifier: (UnifiedBridge<T..., U...>, identifier: string) -> unknown,
-	GetLocalIdentifier: (UnifiedBridge<T..., U...>, value: unknown) -> string,
-
-	-- Signal
-	OnServerReceive: Signal<(Player, U...)>,
-	OnClientReceive: Signal<T...>,
-
-	eachC: (UnifiedBridge<T..., U...>, discriminator: string | number?) -> () -> (number, U...),
-	eachS: (UnifiedBridge<T..., U...>, discriminator: string | number?) -> () -> (number, Player, U...),
+	fire_server: (Event<T...>, T...) -> (),
+	fire_clients: (Event<T...>, T...) -> Filterable,
 }
 
-local CheapNet = {}
+return {
 
-CheapNet.LeakyBucket = LeakyBucket
+	create_global_identifier = function(value: unknown, namespace: any?)
+		return identifier_create(namespace or "_global", value)
+	end,
 
--- the before_middleware test exists so you can confirm the packet the client
--- has sent is valid. the after_middleware test exists so that you don't mess
--- up
-function CheapNet.new(bridge, before_middleware_test, after_middleware_test)
-	if RunService:IsServer() then
-		local ServerBridge = require(script.ServerBridge)
-		return ServerBridge.new(bridge, before_middleware_test, after_middleware_test or before_middleware_test)
-	else
-		local ClientBridge = require(script.ClientBridge)
-		return ClientBridge.new(bridge, before_middleware_test, after_middleware_test or before_middleware_test)
-	end
-end
+	get_global_identifier = function(key: string, namespace: any?)
+		return identifier_get(namespace or "_global", key)
+	end,
 
-function CheapNet.FromGlobalIdentifier(identifier)
-	return Identifier.fromLocalIdentifier(script, identifier)
-end
+	event = (
+			if RunService:IsServer() then server_bridge :: any else client_bridge :: any
+		) :: <T...>(key: any, behavior: behavior?, typecheck: ((...any) -> T...)?) -> Event<T...>,
 
-function CheapNet.GetGlobalIdentifier(value)
-	return Identifier.getLocalIdentifier(script, value)
-end
+	pack = efficient_pack_int.pack,
+	unpack = efficient_pack_int.unpack,
 
-CheapNet.pack = EfficientPackInt.pack
-CheapNet.unpack = EfficientPackInt.unpack
+	leaky_bucket = leaky_bucket,
 
-RunService.Heartbeat:Connect(function()
-	-- Clear up all the existing packets
-	if RunService:IsServer() then
-		debug.profilebegin("CheapNet Server")
-		Serializer.onSendServer()
-	else
-		debug.profilebegin("CheapNet Client")
-		Serializer.onSendClient()
-	end
+	timestamp = timestamps,
 
-	debug.profileend()
-end)
+	_private = {
+		identifier_create = identifier_create,
+		identifier_get = identifier_get,
+		get_identifier_namespace = get_identifier_namespace,
 
-if RunService:IsClient() then
-	script.Remote.OnClientEvent:Connect(function(packet)
-		Serializer.onReceiveClient(packet)
-	end)
-else
-	script.Remote.OnServerEvent:Connect(function(player, packet)
-		Serializer.onReceiveServer(player, packet)
-	end)
-end
+		packet_encoder = packet_encoder,
+		packet_decoder = packet_decoder,
 
-return CheapNet :: {
-
-	new: (<T..., U...>(bridge: string) -> UnifiedBridge<T..., U...>)
-		& (<T...>(bridge: string, before: RuntimeTypecheck<T...>) -> UnifiedBridge<T..., T...>)
-		& (<T..., U...>(
-			bridge: string,
-			before: RuntimeTypecheck<T...>,
-			after: RuntimeTypecheck<U...>
-		) -> UnifiedBridge<T..., U...>),
-
-	FromGlobalIdentifier: (identifier: string) -> unknown,
-	GetGlobalIdentifier: (value: unknown) -> string,
-
-	LeakyBucket: typeof(LeakyBucket),
-
-	pack: (value: number) -> string,
-	unpack: (value: string) -> number,
+		filterable = filterable,
+	},
 }

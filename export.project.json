@@ -1,43 +1,37 @@
 {
-  "name": "CheapNet",
-  
-  "tree": {
-    
-    "$className": "DataModel",
-    
-    "ReplicatedStorage": {
-      "$className": "ReplicatedStorage",
-      
-      "Packages": {
-        "$className": "ModuleScript",
-        
-        "$path": "Packages",
-        
-        "CheapNet": {
-          "$path": "src"
-          
-        }
-        
-      },
-      
-      "$path": "test/shared"
-    },
-    
-    "ServerScriptService": {
-      "Server": {
-        "$path": "test/server"
-      }
-      
-    },
-    
-    "StarterPlayer": {
-      "StarterPlayerScripts": {
-        "Client": {
-          "$path": "test/client"
-        }
-        
-      }
-    }
-    
-  }
+	"name": "CheapNet",
+
+	"tree": {
+		"$className": "DataModel",
+
+		"ReplicatedStorage": {
+			"$className": "ReplicatedStorage",
+
+			"Packages": {
+				"$className": "ModuleScript",
+
+				"$path": "DevPackages",
+
+				"CheapNet": {
+					"$path": "src"
+				}
+			},
+
+			"$path": "test/roblox/shared"
+		},
+
+		"ServerScriptService": {
+			"Server": {
+				"$path": "test/roblox/server"
+			}
+		},
+
+		"StarterPlayer": {
+			"StarterPlayerScripts": {
+				"Client": {
+					"$path": "test/roblox/client"
+				}
+			}
+		}
+	}
 }
