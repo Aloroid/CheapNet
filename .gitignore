@@ -7,4 +7,7 @@
 
 # Packages
 /Packages
+/DevPackages
 /sourcemap.json
+
+/wally.lock

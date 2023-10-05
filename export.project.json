@@ -11,7 +11,7 @@
       "Packages": {
         "$className": "ModuleScript",
         
-        "$path": "Packages",
+        "$path": "DevPackages",
         
         "CheapNet": {
           "$path": "src"
