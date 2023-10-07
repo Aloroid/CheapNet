@@ -11,14 +11,6 @@ if not Vector3int16 then
 	is_vector = "table"
 end
 
-local function convert(packet: { any } | any): ...any
-	if type(packet) == "table" then
-		return unpack(packet)
-	else
-		return packet
-	end
-end
-
 -- serializes the ordered packets using either 1 byte or 2 byte identifiers.
 local function deserialize_ordered(ordered: { any }, is_16bit: boolean)
 	local normal = {}

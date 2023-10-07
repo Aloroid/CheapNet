@@ -15,18 +15,8 @@ if Vector3int16 == nil then
 	}
 end
 
-local function convert(...): { any } | any
-	local a = ...
-	if select("#", ...) > 1 or type(a) == "table" or a == nil then
-		return { ... }
-	else
-		return a
-	end
-end
-
-local function add_packet_to_queue(queue: { any }, type: "ordered" | "unordered", id: number, ...)
+local function add_packet_to_queue(queue: { any }, type: "ordered" | "unordered", id: number, packet: any)
 	is_16bit = is_16bit or id > 255
-	local packet = convert(...)
 
 	if type == "unordered" then
 		queue[id] = queue[id] or {}
