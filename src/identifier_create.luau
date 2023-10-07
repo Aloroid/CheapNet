@@ -14,9 +14,10 @@ local remote_new: RemoteEvent
 local remote_get_all: RemoteFunction
 
 local function get_remote()
+	if not remote_new then
+		return
+	end
 
-	if not remote_new then return end
-	
 	if RunService:IsServer() then
 		remote_new = Instance.new("RemoteEvent")
 		remote_get_all = Instance.new("RemoteFunction")
@@ -41,11 +42,10 @@ local function get_remote()
 			local replicated_namespaces = remote_get_all:InvokeServer()
 
 			for key, namespace_values in replicated_namespaces do
-				
 				local namespace = {
 					size = #namespace_values,
 					values = namespace_values,
-					keys = {}
+					keys = {},
 				}
 
 				for id, value in namespace_values do
@@ -53,12 +53,10 @@ local function get_remote()
 				end
 
 				identifier_state[key] = replicated_namespaces
-
 			end
 		end)
 
 		remote_new.OnClientEvent:Connect(function(namespace_key: string, id_packed: string, value: any)
-
 			local id = efficient_pack_int.unpack(id_packed)
 			local namespace = get_identifier_namespace(namespace_key)
 			namespace.size += 1
@@ -66,24 +64,23 @@ local function get_remote()
 			namespace.values[id] = value
 		end)
 	end
-
 end
 
 local function replicate_value(namespace_key: string, id: number, value: any)
 	get_remote()
-	
+
 	remote_new:FireAllClients(namespace_key, efficient_pack_int.pack(id, true), value)
 end
 
 local function identifier_create(namespace_key: string, value: any): number?
-
 	local namespace = get_identifier_namespace(namespace_key)
 	local key = namespace.keys[value]
 
-	if key then return key end
+	if key then
+		return key
+	end
 
 	if RunService:IsServer() then
-		
 		local id = namespace.size
 
 		namespace.values[id] = value
@@ -97,7 +94,6 @@ local function identifier_create(namespace_key: string, value: any): number?
 	end
 
 	return nil
-
 end
 
 return identifier_create
