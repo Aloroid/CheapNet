@@ -14,14 +14,26 @@ TEST("Identifiers", function()
 	local identifier = quick_remotes.get_remote_event("identifier_get").OnClientEvent:Wait()
 	local value
 	do
-		CASE("Get Identifier")
+		CASE("Get Identifier Value")
 		value = cheapnet.get_global_identifier(identifier)
 		CHECK(value == "test")
 	end
 
 	do
+		CASE("Get Identifier")
+		CHECK(cheapnet.create_global_identifier("hiiii") ~= nil)
+	end
+
+	do
 		CASE("Identifiers remain the same")
 		CHECK(identifier == cheapnet.create_global_identifier("test"))
+	end
+
+	do
+		CASE("Attempting to create unknown identifiers will error")
+		CHECK(pcall(function()
+			cheapnet.create_global_identifier("awawa")
+		end) == false)
 	end
 end)
 

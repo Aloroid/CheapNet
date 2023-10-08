@@ -15,6 +15,7 @@ TEST("Identifiers", function()
 	do
 		CASE("Create Identifier")
 		identifier = cheapnet.create_global_identifier("test")
+		cheapnet.create_global_identifier("hiiii")
 		CHECK(type(identifier) == "string")
 	end
 
