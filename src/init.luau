@@ -5,6 +5,7 @@
 ]]
 
 local efficient_pack_int = require(script.efficient_pack_int)
+local filterable = require(script.filterable)
 local get_identifier_namespace = require(script.get_identifier_namespace)
 local identifier_create = require(script.identifier_create)
 local identifier_get = require(script.identifier_get)
@@ -31,5 +32,7 @@ return {
 
 		packet_encoder = packet_encoder,
 		packet_decoder = packet_decoder,
+
+		filterable = filterable,
 	},
 }
