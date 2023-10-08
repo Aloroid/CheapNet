@@ -436,7 +436,7 @@ local function deep_eq(a: {}, b: {}): boolean
 				return false
 			end
 		elseif b[i] ~= v then
-			print(i, v)
+			print("!!!", i, v, b[i])
 			return false
 		end
 	end
@@ -447,7 +447,7 @@ local function deep_eq(a: {}, b: {}): boolean
 				return false
 			end
 		elseif a[i] ~= v then
-			print(i, v)
+			print("!!!", i, v, b[i])
 			return false
 		end
 	end
