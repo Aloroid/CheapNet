@@ -1,3 +1,4 @@
+local efficient_pack_int = require("src/efficient_pack_int")
 local packet_decoder = require("src/packet_decoder")
 local packet_encoder = require("src/packet_encoder")
 local testkit = require("test/luau/testkit")
@@ -72,6 +73,28 @@ TEST("packet encoding decoding on unordered", function()
 	do
 		CASE("Packet is equal")
 		CHECK(testkit.deq(queue, result))
+	end
+end)
+
+TEST("int packing", function()
+	do
+		CASE("Packs unsigned integers")
+		CHECK(efficient_pack_int.pack(56, true) == string.char(56))
+		CHECK(efficient_pack_int.unpack(efficient_pack_int.pack(56, true), true) == 56)
+	end
+
+	do
+		CASE("Packs signed integers")
+		print(string.byte(efficient_pack_int.pack(-56)))
+		CHECK(efficient_pack_int.pack(-56, false) == string.char(200))
+		CHECK(efficient_pack_int.unpack(efficient_pack_int.pack(-56)) == -56)
+	end
+
+	do
+		CASE("Errors when packing negative integers as unsigned")
+		CHECK(pcall(function()
+			efficient_pack_int.pack(-56, true)
+		end) == false)
 	end
 end)
 

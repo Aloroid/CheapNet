@@ -4,6 +4,7 @@
 
 ]]
 
+local efficient_pack_int = require(script.efficient_pack_int)
 local get_identifier_namespace = require(script.get_identifier_namespace)
 local identifier_create = require(script.identifier_create)
 local identifier_get = require(script.identifier_get)
@@ -19,6 +20,9 @@ return {
 	get_global_identifier = function(key: string)
 		return identifier_get("global", key)
 	end,
+
+	pack = efficient_pack_int.pack,
+	unpack = efficient_pack_int.unpack,
 
 	_private = {
 		identifier_create = identifier_create,

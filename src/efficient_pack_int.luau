@@ -8,14 +8,13 @@ local BYTE = 256
 
 local function efficient_pack_int(n: number, unsigned: boolean?)
 	n = math.round(n) -- automatically round decimal numbers
-	assert(unsigned == true and n >= 0 or unsigned == false, "Cannot pack negative numbers as unsigned")
+	assert(unsigned == true and n >= 0 or not unsigned, "Cannot pack negative numbers as unsigned")
 
 	if unsigned then
 		local bytes = math.max(1, math.ceil(math.log(n + 1, BYTE)))
 		return string.pack("I" .. bytes, n)
 	else
-		n = if n >= 0 then n + 1 else math.abs(n)
-		local bytes = math.ceil(math.log(n + 1, BYTE / 2))
+		local bytes = math.ceil(math.log(if n >= 0 then n + 1 else math.abs(n) + 1, BYTE / 2))
 		return string.pack("i" .. bytes, n)
 	end
 end
