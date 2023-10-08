@@ -1,3 +1,4 @@
+local efficient_pack_int = require("src/efficient_pack_int")
 local packet_decoder = require("src/packet_decoder")
 local packet_encoder = require("src/packet_encoder")
 local testkit = require("test/luau/testkit")
@@ -71,5 +72,23 @@ do
 	BENCH("Decoding", function()
 		START(#queue)
 		packet_decoder.deserialize_unordered(packet)
+	end)
+end
+
+do
+	TITLE("Integer Packing")
+
+	BENCH("Unsigned Integer Packing", function()
+		START(1000)
+		for i = 1, 1000 do
+			efficient_pack_int.pack(i, false)
+		end
+	end)
+
+	BENCH("Signed Integer Packing", function()
+		START(1000)
+		for i = 1, 1000 do
+			efficient_pack_int.pack(i, true)
+		end
 	end)
 end
