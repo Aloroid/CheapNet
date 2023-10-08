@@ -11,7 +11,7 @@ local function efficient_pack_int(n: number, unsigned: boolean?)
 	assert(unsigned == true and n >= 0 or unsigned == false, "Cannot pack negative numbers as unsigned")
 
 	if unsigned then
-		local bytes = math.ceil(math.log(n + 1, BYTE))
+		local bytes = math.max(1, math.ceil(math.log(n + 1, BYTE)))
 		return string.pack("I" .. bytes, n)
 	else
 		n = if n >= 0 then n + 1 else math.abs(n)

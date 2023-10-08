@@ -176,9 +176,7 @@ local function CHECK<T>(value: T, stack: number?): T
 end
 
 local function TEST(name: string, fn: () -> ())
-	if skip and name ~= skip then
-		return
-	end
+	if skip and name ~= skip then return end
 
 	local active = test
 	assert(not active, "cannot start test while another test is in progress")
@@ -199,9 +197,7 @@ local function TEST(name: string, fn: () -> ())
 	end)
 	test.duration = os.clock() - start
 
-	if not test.case then
-		CASE("")
-	end
+	if not test.case then CASE("") end
 	assert(test.case, "no active case")
 
 	if not success then
@@ -406,35 +402,25 @@ end
 --------------------------------------------------------------------------------
 
 local function shallow_eq(a: {}, b: {}): boolean
-	if #a ~= #b then
-		return false
-	end
+	if #a ~= #b then return false end
 
 	for i, v in next, a do
-		if b[i] ~= v then
-			return false
-		end
+		if b[i] ~= v then return false end
 	end
 
 	for i, v in next, b do
-		if a[i] ~= v then
-			return false
-		end
+		if a[i] ~= v then return false end
 	end
 
 	return true
 end
 
 local function deep_eq(a: {}, b: {}): boolean
-	if #a ~= #b then
-		return false
-	end
+	if #a ~= #b then return false end
 
 	for i, v in next, a do
 		if type(b[i]) == "table" and type(v) == "table" then
-			if deep_eq(b[i], v) == false then
-				return false
-			end
+			if deep_eq(b[i], v) == false then return false end
 		elseif b[i] ~= v then
 			print("!!!", i, v, b[i])
 			return false
@@ -443,9 +429,7 @@ local function deep_eq(a: {}, b: {}): boolean
 
 	for i, v in next, b do
 		if type(a[i]) == "table" and type(v) == "table" then
-			if deep_eq(a[i], v) == false then
-				return false
-			end
+			if deep_eq(a[i], v) == false then return false end
 		elseif a[i] ~= v then
 			print("!!!", i, v, b[i])
 			return false

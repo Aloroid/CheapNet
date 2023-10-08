@@ -130,9 +130,9 @@ local function output_test_result(test: Test)
 		local line = case.result == FAIL and color.red(`{case.line}:`) or ""
 
 		if disabled_formatting and warn and (case.result == FAIL or case.result == ERROR) then
-			warn(`{status}{WALL} {line}{color.gray(case.name)}`)
+			warn(`\t{status}{WALL} {line}{color.gray(case.name)}`)
 		else
-			print(`{status}{WALL} {line}{color.gray(case.name)}`)
+			print((if disabled_formatting then "\t" else ""), `{status}{WALL} {line}{color.gray(case.name)}`)
 		end
 	end
 

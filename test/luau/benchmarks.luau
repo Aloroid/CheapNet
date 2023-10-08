@@ -1,6 +1,6 @@
-local testkit = require("test/luau/testkit")
-local packet_encoder = require("src/packet_encoder")
 local packet_decoder = require("src/packet_decoder")
+local packet_encoder = require("src/packet_encoder")
+local testkit = require("test/luau/testkit")
 
 local BENCH, START = testkit.benchmark()
 

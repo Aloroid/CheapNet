@@ -14,17 +14,15 @@ local remote_new: RemoteEvent
 local remote_get_all: RemoteFunction
 
 local function get_remote()
-	if not remote_new then
-		return
-	end
+	if remote_new then return end
 
 	if RunService:IsServer() then
 		remote_new = Instance.new("RemoteEvent")
-		remote_get_all = Instance.new("RemoteFunction")
+		remote_get_all = Instance.new("RemoteFunction");
 
-		remote_new.Name = "Receive"
-		remote_get_all.Name = "GetAll"
-		remote_new.Parent = script
+		(remote_new :: any).Name = "Receive"
+		remote_get_all.Name = "GetAll";
+		(remote_new :: any).Parent = script
 		remote_get_all.Parent = script
 
 		remote_get_all.OnServerInvoke = function(player)
@@ -33,6 +31,8 @@ local function get_remote()
 			for key, namespace in identifier_state do
 				namespaces[key] = namespace.values
 			end
+
+			return namespaces
 		end
 	else
 		remote_new = script:WaitForChild("Receive") :: RemoteEvent
@@ -54,9 +54,9 @@ local function get_remote()
 
 				identifier_state[key] = replicated_namespaces
 			end
-		end)
+		end);
 
-		remote_new.OnClientEvent:Connect(function(namespace_key: string, id_packed: string, value: any)
+		(remote_new :: any).OnClientEvent:Connect(function(namespace_key: string, id_packed: string, value: any)
 			local id = efficient_pack_int.unpack(id_packed)
 			local namespace = get_identifier_namespace(namespace_key)
 			namespace.size += 1
@@ -72,13 +72,11 @@ local function replicate_value(namespace_key: string, id: number, value: any)
 	remote_new:FireAllClients(namespace_key, efficient_pack_int.pack(id, true), value)
 end
 
-local function identifier_create(namespace_key: string, value: any): number?
+local function identifier_create(namespace_key: string, value: any): string
 	local namespace = get_identifier_namespace(namespace_key)
 	local key = namespace.keys[value]
 
-	if key then
-		return key
-	end
+	if key then return efficient_pack_int.pack(key, true) end
 
 	if RunService:IsServer() then
 		local id = namespace.size
@@ -90,10 +88,12 @@ local function identifier_create(namespace_key: string, value: any): number?
 
 		replicate_value(namespace_key, id, value)
 
-		return id
+		return efficient_pack_int.pack(id, true)
 	end
 
-	return nil
+	error("identifier does not exist")
 end
+
+get_remote()
 
 return identifier_create
