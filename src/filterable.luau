@@ -6,7 +6,7 @@
 
 local Players = game:GetService("Players")
 
-type Filterable = {
+export type Filterable = {
 
 	-- includes the given players from the filterable.
 	include: (Filterable, players: Player | { Player }) -> Filterable,

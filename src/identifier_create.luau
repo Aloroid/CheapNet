@@ -17,8 +17,9 @@ local function get_remote()
 	if remote_new then return end
 
 	if RunService:IsServer() then
-		remote_new = Instance.new("RemoteEvent")
-		remote_get_all = Instance.new("RemoteFunction");
+		-- we use script:FindFirstChild in-case someone tries running this in parallel
+		remote_new = (script:FindFirstChild("Receive") :: RemoteEvent) or Instance.new("RemoteEvent")
+		remote_get_all = (script:FindFirstChild("GetAll") :: RemoteFunction) or Instance.new("RemoteFunction");
 
 		(remote_new :: any).Name = "Receive"
 		remote_get_all.Name = "GetAll";

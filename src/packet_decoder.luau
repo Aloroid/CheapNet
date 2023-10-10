@@ -4,7 +4,6 @@
 
 ]]
 
-local is_16bit = false
 local cache_8 = {}
 local cache_16 = {}
 
@@ -33,7 +32,7 @@ local function deserialize_ordered(ordered: { any })
 end
 
 local function deserialize_unordered(unordered: { any })
-	local deserialized: { any } = {}
+	local deserialized: { [number]: { any } } = {}
 	local ids = table.remove(unordered, 1) :: string
 	local is_16bit = string.sub(ids, 1, 1) == "H"
 
@@ -50,14 +49,11 @@ local function deserialize_unordered(unordered: { any })
 	return deserialized
 end
 
-local function get_packet(ordered_queue: { any }, unordered_queue: { any })
-	local packet: { any } = {}
-	table.insert(packet, is_16bit)
-	table.insert(packet, deserialize_ordered(ordered_queue))
-	table.insert(packet, deserialize_unordered(unordered_queue))
-	ordered_queue = {}
-	unordered_queue = {}
-	return packet
+local function get_packet(packet: { { any } })
+	local ordered = deserialize_ordered(packet[1])
+	local unordered = deserialize_unordered(packet[2])
+
+	return ordered, unordered
 end
 
 return {

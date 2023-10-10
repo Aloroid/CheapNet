@@ -1,6 +1,7 @@
 local efficient_pack_int = require("src/efficient_pack_int")
 local packet_decoder = require("src/packet_decoder")
 local packet_encoder = require("src/packet_encoder")
+local signal = require("src/signal")
 local testkit = require("test/luau/testkit")
 
 local TEST, CASE, CHECK, FINISH = testkit.test()
@@ -95,6 +96,70 @@ TEST("int packing", function()
 		CHECK(pcall(function()
 			efficient_pack_int.pack(-56, true)
 		end) == false)
+	end
+end)
+
+TEST("signal", function()
+	local s, fire = signal()
+	local connection
+	local v
+
+	do
+		CASE("connecting to signal")
+
+		connection = s:connect(function(a)
+			v = a
+		end)
+
+		CHECK(connection)
+	end
+
+	do
+		CASE("firing signal should call all callbacks")
+		fire(1)
+		CHECK(v == 1)
+	end
+
+	do
+		CASE("disconnecting connections should prevent it from firing again")
+		connection:disconnect()
+		fire(2)
+		CHECK(v == 1)
+	end
+
+	do
+		CASE("reconnecting connections should let it fire again")
+		connection:reconnect()
+		fire(2)
+		CHECK(v == 2)
+	end
+
+	do
+		CASE(":once should only fire once")
+		local v
+		s:once(function(a0: number)
+			v = a0
+		end)
+
+		fire(3)
+		CHECK(v == 3)
+		fire(4)
+		CHECK(v == 3)
+	end
+
+	do
+		CASE(":wait should yield")
+
+		local v
+		local thread = coroutine.create(function()
+			v = s:wait()
+		end)
+
+		coroutine.resume(thread)
+		CHECK(coroutine.status(thread) == "suspended")
+		fire(5)
+		CHECK(coroutine.status(thread) == "dead")
+		CHECK(v == 5)
 	end
 end)
 

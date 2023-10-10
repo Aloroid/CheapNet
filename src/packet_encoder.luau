@@ -67,7 +67,6 @@ end
 
 local function get_packet(ordered_queue: { any }, unordered_queue: { any })
 	local packet: { any } = {}
-	table.insert(packet, is_16bit)
 	table.insert(packet, serialize_ordered(ordered_queue, is_16bit))
 	table.insert(packet, serialize_unordered(unordered_queue, is_16bit))
 	ordered_queue = {}
