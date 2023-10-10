@@ -46,6 +46,7 @@ local function client_send_packet(type: PacketType, id: number, packet: any)
 end
 
 local function server_receive_packet(player: Player, packet: { { any } })
+	debug.profilebegin("server receive packet")
 	assert(type(packet) == "table")
 	assert(#packet[1] > 0)
 	assert(#packet[2] > 0)
@@ -65,9 +66,11 @@ local function server_receive_packet(player: Player, packet: { { any } })
 			bridge:_receive_packet(player, packet)
 		end
 	end
+	debug.profileend()
 end
 
 local function client_receive_packet(packet: { { any } })
+	debug.profilebegin("receive client packet")
 	local ordered, unordered = packet_decoder.get_packet(packet)
 
 	for _, packet in ordered do
@@ -83,9 +86,11 @@ local function client_receive_packet(packet: { { any } })
 			bridge:_receive_packet(packet)
 		end
 	end
+	debug.profileend()
 end
 
 local function server_empty_queue()
+	debug.profilebegin("empty server network queue")
 	local players = {}
 
 	for _, packet in ordered_queue do
@@ -112,15 +117,18 @@ local function server_empty_queue()
 
 	table.clear(ordered_queue)
 	table.clear(unordered_queue)
+	debug.profileend()
 end
 
 local function client_empty_queue()
+	debug.profilebegin("empty client network queue")
 	local packet = packet_encoder.get_packet(ordered_queue, unordered_queue)
 
 	remote:FireServer(packet)
 
 	table.clear(ordered_queue)
 	table.clear(unordered_queue)
+	debug.profileend()
 end
 
 if RunService:IsServer() then
