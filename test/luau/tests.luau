@@ -86,7 +86,6 @@ TEST("int packing", function()
 
 	do
 		CASE("Packs signed integers")
-		print(string.byte(efficient_pack_int.pack(-56)))
 		CHECK(efficient_pack_int.pack(-56, false) == string.char(200))
 		CHECK(efficient_pack_int.unpack(efficient_pack_int.pack(-56)) == -56)
 	end
