@@ -53,11 +53,14 @@ local function server_receive_packet(player: Player, packet: { { any } })
 	local ordered, unordered = packet_decoder.get_packet(packet)
 
 	for _, packet in ordered do
-		stored_bridges[packet.id + 1]:_receive_packet(player, packet.packet)
+		local bridge = stored_bridges[packet.id + 1]
+		if bridge == nil then continue end
+		bridge:_receive_packet(player, packet.packet)
 	end
 
 	for id, packets in unordered do
 		local bridge = stored_bridges[id + 1]
+		if bridge == nil then continue end
 		for _, packet in packets do
 			bridge:_receive_packet(player, packet)
 		end
@@ -68,11 +71,14 @@ local function client_receive_packet(packet: { { any } })
 	local ordered, unordered = packet_decoder.get_packet(packet)
 
 	for _, packet in ordered do
-		stored_bridges[packet.id + 1]:_receive_packet(packet.packet)
+		local bridge = stored_bridges[packet.id + 1]
+		if bridge == nil then continue end
+		bridge:_receive_packet(packet.packet)
 	end
 
 	for id, packets in unordered do
 		local bridge = stored_bridges[id + 1]
+		if bridge == nil then continue end
 		for _, packet in packets do
 			bridge:_receive_packet(packet)
 		end

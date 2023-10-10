@@ -58,11 +58,20 @@ local function get_remote()
 		end);
 
 		(remote_new :: any).OnClientEvent:Connect(function(namespace_key: string, id_packed: string, value: any)
-			local id = efficient_pack_int.unpack(id_packed)
+			local id = efficient_pack_int.unpack(id_packed, true)
 			local namespace = get_identifier_namespace(namespace_key)
 			namespace.size += 1
 			namespace.keys[value] = id
 			namespace.values[id] = value
+
+			if namespace.yielding[value] then
+				-- resume every thread that was waiting for this identifier
+				for _, thread in namespace.yielding[value] do
+					coroutine.resume(thread, id_packed)
+				end
+				-- remove it since it now exists inside the namespace
+				namespace.yielding[value] = nil
+			end
 		end)
 	end
 end
@@ -73,7 +82,7 @@ local function replicate_value(namespace_key: string, id: number, value: any)
 	remote_new:FireAllClients(namespace_key, efficient_pack_int.pack(id, true), value)
 end
 
-local function identifier_create(namespace_key: string, value: any): string
+local function identifier_create(namespace_key: string, value: any, yield: boolean?): string
 	local namespace = get_identifier_namespace(namespace_key)
 	local key = namespace.keys[value]
 
@@ -92,7 +101,13 @@ local function identifier_create(namespace_key: string, value: any): string
 		return efficient_pack_int.pack(id, true)
 	end
 
-	error("identifier does not exist")
+	assert(yield, "identifier does not exist")
+
+	-- special value, this is only used inside client_event_bridge
+	namespace.yielding[value] = namespace.yielding[value] or {}
+	table.insert(namespace.yielding[value], coroutine.running())
+
+	return coroutine.yield()
 end
 
 get_remote()

@@ -1,3 +1,4 @@
+--!native
 --[[
 
 	the packet encoder encodes packets into a special format.
@@ -19,10 +20,10 @@ local function deserialize_ordered(ordered: { any })
 	local cache = if is_16bit then cache_16 else cache_8 :: never
 
 	for i, packet in ordered do
-		local string_id = string.sub(ids, i + 1, i + 1)
-		local id = cache[string_id] or if is_16bit then string.unpack("H", ids, (i - 1) * 2) else string.byte(string_id);
+		local s_id = string.sub(ids, if is_16bit then i * 2 else i + 1, if is_16bit then i * 2 + 1 else i + 1)
+		local id = cache[s_id] or if is_16bit then string.unpack("H", s_id) else string.byte(s_id);
 
-		(if is_16bit then cache_16 else cache_8 :: never)[string_id] = id
+		(if is_16bit then cache_16 else cache_8 :: never)[s_id] = id
 
 		deserialized[i] = { id = id, packet = packet }
 	end
@@ -39,8 +40,8 @@ local function deserialize_unordered(unordered: { any })
 	local cache = if is_16bit then cache_16 else cache_8 :: never
 
 	for i, packets in unordered do
-		local s_id = string.sub(ids, i + 1, i + 1)
-		local id = cache[s_id] or (is_16bit and string.unpack("H", ids, (i - 1) * 2) or string.byte(s_id))
+		local s_id = string.sub(ids, if is_16bit then i * 2 else i + 1, if is_16bit then i * 2 + 1 else i + 1)
+		local id = cache[s_id] or (is_16bit and string.unpack("H", s_id) or string.byte(s_id))
 		cache[s_id] = id
 
 		deserialized[id] = packets

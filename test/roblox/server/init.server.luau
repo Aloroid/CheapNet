@@ -106,6 +106,7 @@ cheapnet.event(4, "ordered")
 cheapnet.event(5, "ordered")
 cheapnet.event(6, "ordered")
 cheapnet.event(7, "unordered")
+
 TEST("Unordered Events", function()
 	do
 		CASE("Remotes receive and send packets")
@@ -132,6 +133,97 @@ TEST("Unordered Events", function()
 end)
 
 TEST("Ordered Events", function()
+	do
+		CASE("Remotes receive and send packets")
+		local event = cheapnet.event(3, "ordered")
+
+		quick_remotes.get_remote_event("event").OnServerEvent:Wait()
+		event:fire_clients(true):all()
+
+		quick_remotes.get_remote_event("event"):FireClient(filterable():all():list()[1])
+		local plr, a = event.on_server_event:wait()
+		CHECK(plr:IsA("Player") and a == true)
+	end
+
+	do
+		CASE("Remotes respect nil values")
+		local event = cheapnet.event(4, "ordered")
+
+		quick_remotes.get_remote_event("event").OnServerEvent:Wait()
+		event:fire_clients(true, nil, false):all()
+		local _, a, b, c = event.on_server_event:wait()
+
+		CHECK(a == true)
+		CHECK(b == nil)
+		CHECK(c == false)
+	end
+
+	do
+		CASE("Remotes respect order")
+		local event1 = cheapnet.event(5, "ordered")
+		local event2 = cheapnet.event(6, "ordered")
+		local event3 = cheapnet.event(7, "unordered")
+
+		quick_remotes.get_remote_event("event").OnServerEvent:Wait()
+		event3:fire_clients():all()
+		event1:fire_clients():all()
+		event2:fire_clients():all()
+		event1:fire_clients():all()
+
+		local order = {}
+		local thread = coroutine.running()
+
+		local function add(n)
+			return function()
+				table.insert(order, n)
+				if #order == 4 then coroutine.resume(thread) end
+			end
+		end
+
+		event1.on_server_event:connect(add(1))
+		event2.on_server_event:connect(add(2))
+		event3.on_server_event:connect(add(3))
+
+		coroutine.yield()
+
+		CHECK(order[1] == 1)
+		CHECK(order[2] == 2)
+		CHECK(order[3] == 1)
+		CHECK(order[4] == 3)
+	end
+end)
+
+TEST("Unordered Events 16bit", function()
+	for i = 1, 300 do
+		cheapnet.event(i)
+	end
+	cheapnet.event(301):fire_clients():all()
+
+	do
+		CASE("Remotes receive and send packets")
+		local event = cheapnet.event(1)
+
+		quick_remotes.get_remote_event("event").OnServerEvent:Wait()
+		event:fire_clients(true):all()
+		CHECK(true)
+
+		quick_remotes.get_remote_event("event"):FireClient(filterable():all():list()[1])
+		local plr, a = event.on_server_event:wait()
+		CHECK(plr:IsA("Player") and a == true)
+	end
+
+	do
+		CASE("Remotes respect nil values")
+		local event = cheapnet.event(2)
+		quick_remotes.get_remote_event("event").OnServerEvent:Wait()
+		event:fire_clients(true, nil, false):all()
+		local _, a, b, c = event.on_server_event:wait()
+
+		CHECK(a == true and b == nil and c == false)
+	end
+end)
+
+TEST("Ordered Events 16bit", function()
 	do
 		CASE("Remotes receive and send packets")
 		local event = cheapnet.event(3, "ordered")

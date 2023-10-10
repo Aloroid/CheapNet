@@ -26,7 +26,7 @@ local function pack_packet(...)
 end
 
 local function create_server_bridge<T...>(key, behavior)
-	local id = efficient_pack_int.unpack(identifier_create("event", key))
+	local id = efficient_pack_int.unpack(identifier_create("event", key), true)
 	local signal: Signal<(Player, T...)>, fire = signal()
 
 	local self = {

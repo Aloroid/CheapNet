@@ -6,9 +6,11 @@ local testkit = require("test/luau/testkit")
 
 local TEST, CASE, CHECK, FINISH = testkit.test()
 
-local function generate_ordered_packet()
+math.randomseed(0)
+
+local function generate_ordered_packet(n: number)
 	return {
-		id = math.random(1, 6),
+		id = math.random(1, n),
 		packet = true,
 	}
 end
@@ -23,13 +25,67 @@ local function generate_unordered_packet(n: number)
 	return packets
 end
 
+TEST("packet encoding decoding on ordered 16bit", function()
+	local queue = {}
+	local result
+	local packet
+
+	for i = 1, 300 do
+		table.insert(queue, generate_ordered_packet(300))
+	end
+
+	do
+		CASE("Packet Encoding")
+		packet = packet_encoder.serialize_ordered(queue, true)
+		CHECK(packet)
+	end
+
+	do
+		CASE("Packet Decoding")
+		result = packet_decoder.deserialize_ordered(packet)
+		CHECK(result)
+	end
+
+	do
+		CASE("Packet is equal")
+		CHECK(testkit.deq(queue, result))
+	end
+end)
+
+TEST("packet encoding decoding on unordered 16bit", function()
+	local queue = {}
+	local result
+	local packet
+
+	for i = 1, 300 do
+		queue[i] = generate_unordered_packet(10)
+	end
+
+	do
+		CASE("Packet Encoding")
+		packet = packet_encoder.serialize_unordered(queue, true)
+		CHECK(packet)
+	end
+
+	do
+		CASE("Packet Decoding")
+		result = packet_decoder.deserialize_unordered(packet)
+		CHECK(result)
+	end
+
+	do
+		CASE("Packet is equal")
+		CHECK(testkit.deq(queue, result))
+	end
+end)
+
 TEST("packet encoding decoding on ordered", function()
 	local queue = {}
 	local result
 	local packet
 
-	for i = 1, 6 do
-		table.insert(queue, generate_ordered_packet())
+	for i = 1, 255 do
+		table.insert(queue, generate_ordered_packet(255))
 	end
 
 	do
@@ -55,7 +111,7 @@ TEST("packet encoding decoding on unordered", function()
 	local result
 	local packet
 
-	for i = 1, 6 do
+	for i = 1, 255 do
 		queue[i] = generate_unordered_packet(10)
 	end
 

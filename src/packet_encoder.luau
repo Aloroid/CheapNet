@@ -9,6 +9,7 @@ local cache_8 = {}
 local cache_16 = {}
 
 local function add_packet_to_queue(queue: { any }, type: "ordered" | "unordered", id: number, packet: any)
+	if id > 255 and is_16bit == false then warn("16 bit mode enabled, packets now take more space") end
 	is_16bit = is_16bit or id > 255
 
 	if type == "unordered" then

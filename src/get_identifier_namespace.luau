@@ -6,7 +6,7 @@ local function get_identifier_namespace(namespace_key: string)
 	if namespace then
 		return namespace
 	else
-		local new_namespace = { size = 0, keys = {}, values = {} }
+		local new_namespace = { size = 0, keys = {}, values = {}, yielding = {} }
 		identifier_state[namespace_key] = new_namespace
 		return new_namespace
 	end
