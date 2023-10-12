@@ -25,9 +25,12 @@ local function pack_packet(...)
 	end
 end
 
-local function create_server_bridge<T...>(key, behavior)
+local function create_server_bridge<T...>(key, behavior, runtime: ((...any) -> (true, T...) | false)?)
 	local id = efficient_pack_int.unpack(identifier_create("event", key), true)
 	local signal: Signal<(Player, T...)>, fire = signal()
+	local typeguard = runtime or function()
+		return true
+	end :: never
 
 	local self = {
 
@@ -50,6 +53,9 @@ local function create_server_bridge<T...>(key, behavior)
 	end
 
 	function self:_receive_packet(player: Player, packet: any)
+		local s = pcall(typeguard, unpack(packet))
+		if not s then return end
+
 		fire(player, unpack_packet(packet))
 	end
 

@@ -14,6 +14,8 @@ local function CHECK_ERR(callback: () -> (), ...)
 	CHECK(pcall(callback, ...) == false)
 end
 
+cheapnet.event()
+
 TEST("Identifiers", function()
 	quick_remotes.get_remote_event("identifier_create").OnServerEvent:Wait()
 

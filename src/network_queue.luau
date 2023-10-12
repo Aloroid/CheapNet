@@ -53,16 +53,35 @@ local function server_receive_packet(player: Player, packet: { { any } })
 
 	local ordered, unordered = packet_decoder.get_packet(packet)
 
+	if #ordered > 1000 then
+		warn(`{player.Name} tried sending more than 1000 ordered packets at once, which might affect performance`)
+		return
+	end
+
+	if #unordered > 1000 then
+		warn(`{player.Name} tried sending to more than 1000 unordered remotes at once, which might affect performance`)
+		return
+	end
+
 	for _, packet in ordered do
 		local bridge = stored_bridges[packet.id + 1]
 		if bridge == nil then continue end
 		bridge:_receive_packet(player, packet.packet)
 	end
 
+	local n = 0
+
 	for id, packets in unordered do
 		local bridge = stored_bridges[id + 1]
 		if bridge == nil then continue end
 		for _, packet in packets do
+			n += 1
+			if n > 10000 then
+				warn(
+					`{player.Name} tried sending more than 10000 unordered packets at once, which might affect performance`
+				)
+				return
+			end
 			bridge:_receive_packet(player, packet)
 		end
 	end
