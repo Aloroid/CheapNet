@@ -12,7 +12,6 @@
 
 ## Improvements
 
--   Completely new API
 -   Complete Rewrite
 -   Removed local identifiers for namespaces
 -   Having less than 256 remotes results in smaller identifiers
