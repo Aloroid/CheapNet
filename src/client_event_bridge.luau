@@ -3,8 +3,10 @@ local identifier_create = require(script.Parent.identifier_create)
 local network_queue = require(script.Parent.network_queue)
 local signal = require(script.Parent.signal)
 local stored_bridges = require(script.Parent.stored_bridges)
+local timestamps = require(script.Parent.timestamps)
 
 type Signal<T...> = signal.Signal<T...>
+type behavior = "ordered" | "unordered" | "unreliable" | "unreliable_drop_old_packets"
 
 local function unpack_packet(packet: any)
 	if type(packet) == "table" then
@@ -32,7 +34,7 @@ local function create_client_bridge<T...>(key: string, behavior)
 
 		id = id,
 		on_client_event = signal,
-		behavior = behavior or "unordered" :: "unordered" | "ordered",
+		behavior = behavior or "unordered" :: behavior,
 	}
 
 	stored_bridges[id + 1] = self
@@ -45,11 +47,31 @@ local function create_client_bridge<T...>(key: string, behavior)
 		network_queue.client_send_packet(self.behavior, id, packet)
 	end
 
-	function self:_receive_packet(packet: any)
+	local latest = 0
+	function self:_receive_packet(timestamp: number, packet: any)
+		if behavior == "unreliable_drop_old_packets" then
+			if latest > timestamp then return end
+			latest = timestamp
+		end
+
+		timestamps.set_timestamp(timestamp)
 		fire(unpack_packet(packet))
+		timestamps.set_timestamp(0)
 	end
 
-	return self
+	return table.freeze(self)
 end
 
-return create_client_bridge
+local cached = {}
+return function<T...>(key, behavior, runtime: ((...any) -> (true, T...) | false)?)
+	if cached[key] then
+		assert(
+			cached[key].behavior == behavior or behavior == nil,
+			`behavior does not match the existing behavior of "{cached[key]}"`
+		)
+		return cached[key]
+	end
+
+	cached[key] = create_client_bridge(key, behavior)
+	return cached[key]
+end

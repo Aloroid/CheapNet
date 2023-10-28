@@ -14,8 +14,6 @@ local function CHECK_ERR(callback: () -> (), ...)
 	CHECK(pcall(callback, ...) == false)
 end
 
-cheapnet.event()
-
 TEST("Identifiers", function()
 	quick_remotes.get_remote_event("identifier_create").OnServerEvent:Wait()
 
@@ -137,7 +135,7 @@ end)
 TEST("Ordered Events", function()
 	do
 		CASE("Remotes receive and send packets")
-		local event = cheapnet.event(3, "ordered")
+		local event = cheapnet.event(3)
 
 		quick_remotes.get_remote_event("event").OnServerEvent:Wait()
 		event:fire_clients(true):all()
@@ -149,7 +147,7 @@ TEST("Ordered Events", function()
 
 	do
 		CASE("Remotes respect nil values")
-		local event = cheapnet.event(4, "ordered")
+		local event = cheapnet.event(4)
 
 		quick_remotes.get_remote_event("event").OnServerEvent:Wait()
 		event:fire_clients(true, nil, false):all()
@@ -162,9 +160,9 @@ TEST("Ordered Events", function()
 
 	do
 		CASE("Remotes respect order")
-		local event1 = cheapnet.event(5, "ordered")
-		local event2 = cheapnet.event(6, "ordered")
-		local event3 = cheapnet.event(7, "unordered")
+		local event1 = cheapnet.event(5)
+		local event2 = cheapnet.event(6)
+		local event3 = cheapnet.event(7)
 
 		quick_remotes.get_remote_event("event").OnServerEvent:Wait()
 		event3:fire_clients():all()
@@ -192,6 +190,33 @@ TEST("Ordered Events", function()
 		CHECK(order[2] == 2)
 		CHECK(order[3] == 1)
 		CHECK(order[4] == 3)
+	end
+end)
+
+cheapnet.event(8, "unreliable")
+cheapnet.event(9, "unreliable")
+TEST("Unreliable Events", function()
+	do
+		CASE("Remotes receive and send packets")
+		local event = cheapnet.event(8)
+
+		quick_remotes.get_remote_event("event").OnServerEvent:Wait()
+		event:fire_clients(true):all()
+		CHECK(true)
+
+		quick_remotes.get_remote_event("event"):FireClient(filterable():all():list()[1])
+		local plr, a = event.on_server_event:wait()
+		CHECK(plr:IsA("Player") and a == true)
+	end
+
+	do
+		CASE("Remotes respect nil values")
+		local event = cheapnet.event(9)
+		quick_remotes.get_remote_event("event").OnServerEvent:Wait()
+		event:fire_clients(true, nil, false):all()
+		local _, a, b, c = event.on_server_event:wait()
+
+		CHECK(a == true and b == nil and c == false)
 	end
 end)
 

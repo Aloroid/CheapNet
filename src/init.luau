@@ -17,9 +17,10 @@ local packet_decoder = require(script.packet_decoder)
 local packet_encoder = require(script.packet_encoder)
 local server_bridge = require(script.server_event_bridge)
 local signal = require(script.signal)
+local timestamps = require(script.timestamps)
 
 type Signal<T...> = signal.Signal<T...>
-type behavior = "ordered" | "unordered"
+type behavior = "ordered" | "unordered" | "unreliable" | "unreliable_drop_old_packets"
 export type Filterable = filterable.Filterable
 export type Event<T...> = {
 
@@ -51,6 +52,8 @@ return {
 	unpack = efficient_pack_int.unpack,
 
 	leaky_bucket = leaky_bucket,
+
+	timestamp = timestamps,
 
 	_private = {
 		identifier_create = identifier_create,
