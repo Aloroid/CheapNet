@@ -36,11 +36,11 @@ export type Event<T...> = {
 
 return {
 
-	create_global_identifier = function(value: unknown, namespace: any?)
+	create_identifier = function(value: unknown, namespace: any?)
 		return identifier_create(namespace or "_global", value)
 	end,
 
-	get_global_identifier = function(key: string, namespace: any?)
+	get_value = function(key: string, namespace: any?)
 		return identifier_get(namespace or "_global", key)
 	end,
 
@@ -51,9 +51,12 @@ return {
 	pack = efficient_pack_int.pack,
 	unpack = efficient_pack_int.unpack,
 
-	leaky_bucket = leaky_bucket,
+	leaky_bucket = leaky_bucket.new,
 
-	timestamp = timestamps,
+	timestamps = timestamps.timestamps,
+	get_timestamp = timestamps.get_timestamp,
+
+	player_warning = timestamps.invalid_timestamp,
 
 	_private = {
 		identifier_create = identifier_create,

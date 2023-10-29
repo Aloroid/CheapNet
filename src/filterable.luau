@@ -16,7 +16,7 @@ export type Filterable = {
 	-- adds all the players, equivalent to :include(Players:GetPlayers())
 	all: (Filterable) -> Filterable,
 
-	-- :never includes a player in a filterable.
+	-- :never excludes a player in a filterable.
 	-- this will remove the player from the filterable and make sure it can't be added again
 	-- calling this on a player that must always remain in will error.
 	-- subsequent :include calls will ignore this player

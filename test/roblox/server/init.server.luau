@@ -20,19 +20,19 @@ TEST("Identifiers", function()
 	local identifier
 	do
 		CASE("Create Identifier")
-		identifier = cheapnet.create_global_identifier("test")
-		cheapnet.create_global_identifier("hiiii")
+		identifier = cheapnet.create_identifier("test")
+		cheapnet.create_identifier("hiiii")
 		CHECK(type(identifier) == "string")
 	end
 
 	do
 		CASE("Identifiers remain the same")
-		CHECK(identifier == cheapnet.create_global_identifier("test"))
+		CHECK(identifier == cheapnet.create_identifier("test"))
 	end
 
 	do
 		CASE("Get Identifier")
-		CHECK("test" == cheapnet.get_global_identifier(identifier))
+		CHECK("test" == cheapnet.get_value(identifier))
 	end
 
 	quick_remotes.get_remote_event("identifier_get"):FireAllClients(identifier)

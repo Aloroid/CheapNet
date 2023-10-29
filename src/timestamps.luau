@@ -25,7 +25,7 @@ end
 Players.PlayerAdded:Connect(add_timestamp)
 Players.PlayerRemoving:Connect(remove_timestamp)
 
-type Errors = "INVALID_TIMESTAMP" | "TOO_MANY_BRIDGES" | "TOO_MANY_PACKETS"
+type Errors = "INVALID_TIMESTAMP" | "TOO_MANY_EVENTS" | "TOO_MANY_PACKETS"
 
 return {
 

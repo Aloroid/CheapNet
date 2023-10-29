@@ -76,12 +76,12 @@ local function server_receive_packet(player: Player, timestamp: number, packet: 
 	local ordered, unordered = packet_decoder.get_packet(packet)
 
 	if #ordered > 1000 then
-		timestamps.invalid_timestamp:fire(player, "TOO_MANY_BRIDGES")
+		timestamps.invalid_timestamp:fire(player, "TOO_MANY_EVENTS")
 		return
 	end
 
 	if #unordered > 1000 then
-		timestamps.invalid_timestamp:fire(player, "TOO_MANY_BRIDGES")
+		timestamps.invalid_timestamp:fire(player, "TOO_MANY_EVENTS")
 		return
 	end
 
@@ -91,10 +91,12 @@ local function server_receive_packet(player: Player, timestamp: number, packet: 
 		bridge:_receive_packet(player, timestamp, packet.packet)
 	end
 
+	local n = 0
 	for id, packets in unordered do
 		local bridge = stored_bridges[id + 1]
 		if bridge == nil then continue end
-		if #packets > 10000 then
+		n += #packets
+		if n > 10000 then
 			timestamps.invalid_timestamp:fire(player, "TOO_MANY_PACKETS")
 			return
 		end

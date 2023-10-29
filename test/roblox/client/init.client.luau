@@ -15,24 +15,24 @@ TEST("Identifiers", function()
 	local value
 	do
 		CASE("Get Identifier Value")
-		value = cheapnet.get_global_identifier(identifier)
+		value = cheapnet.get_value(identifier)
 		CHECK(value == "test")
 	end
 
 	do
 		CASE("Get Identifier")
-		CHECK(cheapnet.create_global_identifier("hiiii") ~= nil)
+		CHECK(cheapnet.create_identifier("hiiii") ~= nil)
 	end
 
 	do
 		CASE("Identifiers remain the same")
-		CHECK(identifier == cheapnet.create_global_identifier("test"))
+		CHECK(identifier == cheapnet.create_identifier("test"))
 	end
 
 	do
 		CASE("Attempting to create unknown identifiers will error")
 		CHECK(pcall(function()
-			cheapnet.create_global_identifier("awawa")
+			cheapnet.create_identifier("awawa")
 		end) == false)
 	end
 end)
