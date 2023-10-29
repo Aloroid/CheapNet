@@ -16,4 +16,3 @@
 docs/.vitepress/dist
 docs/.vitepress/cache
 docs/node_modules
-docs/package-lock.json

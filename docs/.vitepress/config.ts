@@ -7,7 +7,7 @@ export default defineConfig({
     titleTemplate: ":title - A Roblox networking library",
 
     description: "A Roblox networking library.",
-    base: "/repo/",
+    base: "/CheapNet/",
     head: [["link", { rel: "icon", href: "/ecr/favicon.svg" }]],
     ignoreDeadLinks: true,
 
