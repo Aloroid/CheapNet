@@ -23,13 +23,14 @@ concurrency:
     group: pages
     cancel-in-progress: false
 
+defaults:
+    run:
+        working-directory: ./docs
+
 jobs:
     # Build job
     build:
         runs-on: ubuntu-latest
-        defaults:
-            run:
-                working-directory: ./docs
         steps:
             - name: Checkout
               uses: actions/checkout@v3
@@ -42,6 +43,7 @@ jobs:
               with:
                   node-version: 18
                   cache: npm # or pnpm / yarn
+                  cache-dependency-path: docs/package-lock.json
             - name: Setup Pages
               uses: actions/configure-pages@v3
             - name: Install dependencies
