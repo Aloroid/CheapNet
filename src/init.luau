@@ -46,7 +46,7 @@ return {
 
 	event = (
 			if RunService:IsServer() then server_bridge :: any else client_bridge :: any
-		) :: <T...>(key: any, behavior: behavior?, typecheck: ((...any) -> T...)?) -> Event<T...>,
+		) :: <T...>(key: any, behavior: behavior?, typecheck: ((T...) -> boolean)?) -> Event<T...>,
 
 	pack = efficient_pack_int.pack,
 	unpack = efficient_pack_int.unpack,
