@@ -27,7 +27,7 @@ local function pack_packet(...)
 end
 
 local function create_client_bridge<T...>(key: string, behavior)
-	local id = efficient_pack_int.unpack(identifier_create("event", key, true), true)
+	local id = -1
 	local signal: Signal<T...>, fire = signal()
 
 	local self = {
@@ -37,11 +37,13 @@ local function create_client_bridge<T...>(key: string, behavior)
 		behavior = behavior or "unordered" :: behavior,
 	}
 
-	stored_bridges[id + 1] = self
-
-	self.on_server_event = signal
+	task.spawn(function()
+		id = efficient_pack_int.unpack(identifier_create("event", key, true), true)
+		stored_bridges[id + 1] = self
+	end)
 
 	function self:fire_server(...)
+		assert(id ~= -1)
 		local packet = pack_packet(...)
 
 		network_queue.client_send_packet(self.behavior, id, packet)
