@@ -13,23 +13,6 @@ local identifier_state = require(script.Parent.identifier_state)
 local remote_new: RemoteEvent
 local remote_get_all: RemoteFunction
 
-local function add_value_to_namespace_client(namespace_key: string, id: number, value: any)
-	local namespace = get_identifier_namespace(namespace_key)
-	namespace.size += 1
-
-	namespace.keys[value] = id
-	namespace.values[id] = value
-
-	if namespace.yielding[value] then
-		-- resume every thread that was waiting for this identifier
-		for _, thread in namespace.yielding[value] do
-			coroutine.resume(thread, efficient_pack_int.pack(id - 1, true))
-		end
-		-- remove it since it now exists inside the namespace
-		namespace.yielding[value] = nil
-	end
-end
-
 local function get_remote()
 	if remote_new then return end
 
@@ -60,15 +43,43 @@ local function get_remote()
 			local replicated_namespaces = remote_get_all:InvokeServer()
 
 			for key, namespace_values in replicated_namespaces do
+				local namespace = get_identifier_namespace(key)
+
+				namespace.values = namespace_values
+				namespace.size = #namespace_values
+
 				for id, value in namespace_values do
-					add_value_to_namespace_client(key, id, value)
+					namespace.keys[value] = id
+
+					if namespace.yielding[value] then
+						-- resume every thread that was waiting for this identifier
+						for _, thread in namespace.yielding[value] do
+							coroutine.resume(thread, efficient_pack_int.pack(id, true))
+						end
+						-- remove it since it now exists inside the namespace
+						namespace.yielding[value] = nil
+					end
 				end
+
+				identifier_state[key] = replicated_namespaces
 			end
 		end);
 
 		(remote_new :: any).OnClientEvent:Connect(function(namespace_key: string, id_packed: string, value: any)
-			local id = efficient_pack_int.unpack(id_packed, true) + 1
-			add_value_to_namespace_client(namespace_key, id, value)
+			local id = efficient_pack_int.unpack(id_packed, true)
+			local namespace = get_identifier_namespace(namespace_key)
+			namespace.size += 1
+			namespace.keys[value] = id
+			namespace.values[id] = value
+
+			if namespace.yielding[value] then
+				-- resume every thread that was waiting for this identifier
+				for _, thread in namespace.yielding[value] do
+					coroutine.resume(thread, id_packed)
+				end
+				-- remove it since it now exists inside the namespace
+				namespace.yielding[value] = nil
+			end
 		end)
 	end
 end
@@ -86,14 +97,16 @@ local function identifier_create(namespace_key: string, value: any, yield: boole
 	if key then return efficient_pack_int.pack(key, true) end
 
 	if RunService:IsServer() then
-		namespace.size += 1
 		local id = namespace.size
 
 		namespace.values[id] = value
 		namespace.keys[value] = id
 
-		replicate_value(namespace_key, id - 1, value)
-		return efficient_pack_int.pack(id - 1, true)
+		namespace.size += 1
+
+		replicate_value(namespace_key, id, value)
+
+		return efficient_pack_int.pack(id, true)
 	end
 
 	assert(yield, "identifier does not exist")

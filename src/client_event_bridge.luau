@@ -37,13 +37,23 @@ local function create_client_bridge<T...>(key: string, behavior)
 		behavior = behavior or "unordered" :: behavior,
 	}
 
+	local pending: { { any } } = {}
 	task.spawn(function()
 		id = efficient_pack_int.unpack(identifier_create("event", key, true), true)
 		stored_bridges[id + 1] = self
+
+		for _, packet in pending do
+			(self :: any):fire_server(unpack(packet))
+		end
 	end)
 
 	function self:fire_server(...)
-		assert(id ~= -1)
+		-- delay the packet
+		if id == -1 then
+			table.insert(pending, { ... })
+			return
+		end
+
 		local packet = pack_packet(...)
 
 		network_queue.client_send_packet(self.behavior, id, packet)
