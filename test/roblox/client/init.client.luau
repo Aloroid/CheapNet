@@ -250,6 +250,14 @@ TEST("RemoteFunctions", function()
 	end
 end)
 
+TEST("Yielding doesn't stop requires", function()
+	do
+		CASE("Yield")
+
+		CHECK(require(script.yielding_require))
+	end
+end)
+
 cheapnet.player_warning:connect(function(...)
 	warn(...)
 end)

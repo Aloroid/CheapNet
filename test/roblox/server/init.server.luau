@@ -311,6 +311,10 @@ TEST("Ordered Events 16bit", function()
 	end
 end)
 
+quick_remotes.get_remote_event("new_remote").OnServerEvent:Connect(function()
+	cheapnet.event("this_inst_here_yet")
+end)
+
 local func = cheapnet.r_function("func")
 func.on_invoke = function(player, n)
 	return n == 4, "yay!"

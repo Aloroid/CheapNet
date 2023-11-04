@@ -50,15 +50,6 @@ local function get_remote()
 
 				for id, value in namespace_values do
 					namespace.keys[value] = id
-
-					if namespace.yielding[value] then
-						-- resume every thread that was waiting for this identifier
-						for _, thread in namespace.yielding[value] do
-							coroutine.resume(thread, efficient_pack_int.pack(id, true))
-						end
-						-- remove it since it now exists inside the namespace
-						namespace.yielding[value] = nil
-					end
 				end
 
 				identifier_state[key] = replicated_namespaces
@@ -71,15 +62,6 @@ local function get_remote()
 			namespace.size += 1
 			namespace.keys[value] = id
 			namespace.values[id] = value
-
-			if namespace.yielding[value] then
-				-- resume every thread that was waiting for this identifier
-				for _, thread in namespace.yielding[value] do
-					coroutine.resume(thread, id_packed)
-				end
-				-- remove it since it now exists inside the namespace
-				namespace.yielding[value] = nil
-			end
 		end)
 	end
 end
@@ -111,11 +93,11 @@ local function identifier_create(namespace_key: string, value: any, yield: boole
 	assert(yield, "identifier does not exist")
 
 	-- special value, this is only used inside client_event_bridge
-	namespace.yielding[value] = namespace.yielding[value] or {}
-	table.insert(namespace.yielding[value], coroutine.running())
-	local id = coroutine.yield()
+	while namespace.keys[value] == nil do
+		task.wait()
+	end
 
-	return id
+	return efficient_pack_int.pack(namespace.keys[value], true)
 end
 
 get_remote()
