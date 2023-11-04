@@ -51,8 +51,6 @@ local function get_remote()
 				for id, value in namespace_values do
 					namespace.keys[value] = id
 				end
-
-				identifier_state[key] = replicated_namespaces
 			end
 		end);
 
@@ -78,12 +76,11 @@ local function identifier_create(namespace_key: string, value: any, yield: boole
 	if key then return efficient_pack_int.pack(key, true) end
 
 	if RunService:IsServer() then
+		namespace.size += 1
 		local id = namespace.size
 
 		namespace.values[id] = value
 		namespace.keys[value] = id
-
-		namespace.size += 1
 
 		replicate_value(namespace_key, id, value)
 
