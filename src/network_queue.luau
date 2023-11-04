@@ -16,7 +16,8 @@ local unreliable_queue = {}
 local remote_reliable
 local remote_unreliable
 
-local can_create_unreliable = false
+local can_create_unreliable, r: any = pcall(Instance.new, "UnreliableRemoteEvent")
+local can_use_unreliable = pcall(if RunService:IsServer() then r.FireAllClients else r.FireServer, r)
 
 do
 	if RunService:IsServer() then
@@ -25,7 +26,7 @@ do
 		remote_reliable.Name = "PacketReliable"
 		remote_reliable.Parent = script
 
-		if can_create_unreliable then
+		if can_create_unreliable and can_use_unreliable then
 			remote_unreliable = Instance.new("UnreliableRemoteEvent" :: any) :: RemoteEvent
 			remote_unreliable.Name = "PacketUnreliable"
 			remote_unreliable.Parent = script
