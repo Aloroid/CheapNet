@@ -7,6 +7,7 @@
 local RunService = game:GetService("RunService")
 
 local client_bridge = require(script.client_event_bridge)
+local client_remote_function = require(script.client_remote_function)
 local efficient_pack_int = require(script.efficient_pack_int)
 local filterable = require(script.filterable)
 local get_identifier_namespace = require(script.get_identifier_namespace)
@@ -16,6 +17,7 @@ local leaky_bucket = require(script.leaky_bucket)
 local packet_decoder = require(script.packet_decoder)
 local packet_encoder = require(script.packet_encoder)
 local server_bridge = require(script.server_event_bridge)
+local server_remote_function = require(script.server_remote_function)
 local signal = require(script.signal)
 local timestamps = require(script.timestamps)
 
@@ -33,6 +35,13 @@ export type Event<T...> = {
 	fire_server: (Event<T...>, T...) -> (),
 	fire_clients: (Event<T...>, T...) -> Filterable,
 }
+export type Function<T..., U...> = {
+
+	id: number,
+
+	on_invoke: (Player, T...) -> U...,
+	invoke: (Function<T..., U...>, T...) -> U...,
+}
 
 return {
 
@@ -47,6 +56,9 @@ return {
 	event = (
 			if RunService:IsServer() then server_bridge :: any else client_bridge :: any
 		) :: <T...>(key: any, behavior: behavior?, typecheck: ((T...) -> boolean)?) -> Event<T...>,
+	r_function = (
+			if RunService:IsServer() then server_remote_function :: any else client_remote_function :: any
+		) :: <T..., U...>(key: any, typecheck: ((T...) -> boolean)?) -> Function<T..., U...>,
 
 	pack = efficient_pack_int.pack,
 	unpack = efficient_pack_int.unpack,

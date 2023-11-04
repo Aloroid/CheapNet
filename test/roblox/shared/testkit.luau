@@ -192,9 +192,31 @@ local function TEST(name: string, fn: () -> ())
 
 	local start = os.clock()
 	local err
-	local success = xpcall(fn, function(m: string)
-		err = { message = m, trace = debug.traceback(nil, 2) }
+	local finished = false
+	local main = coroutine.running()
+
+	local thread = coroutine.create(function()
+		fn()
+		coroutine.resume(main, true)
 	end)
+
+	task.delay(5, function()
+		if finished == true then return end
+		warn(`test "{name}" is not finishing`)
+		warn(debug.traceback(thread))
+		coroutine.close(thread)
+		coroutine.resume(main, false, "did not finish")
+	end)
+
+	local success, m = coroutine.resume(thread)
+
+	if coroutine.status(thread) ~= "dead" then
+		success, m = coroutine.yield()
+	end
+
+	if success == false then err = { message = m, trace = debug.traceback(thread) } end
+
+	finished = true
 	test.duration = os.clock() - start
 
 	if not test.case then CASE("") end

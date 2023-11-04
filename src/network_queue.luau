@@ -16,7 +16,7 @@ local unreliable_queue = {}
 local remote_reliable
 local remote_unreliable
 
-local can_create_unreliable = pcall(Instance.new, "UnreliableRemoteEvent")
+local can_create_unreliable = false
 
 do
 	if RunService:IsServer() then

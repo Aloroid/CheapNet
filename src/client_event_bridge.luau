@@ -26,8 +26,8 @@ local function pack_packet(...)
 	end
 end
 
-local function create_client_bridge<T...>(key: string, behavior)
-	local id = -1
+local function create_client_bridge<T...>(key, behavior: behavior?)
+	local id = efficient_pack_int.unpack(identifier_create("event", key, true), true)
 	local signal: Signal<T...>, fire = signal()
 
 	local self = {
@@ -37,23 +37,9 @@ local function create_client_bridge<T...>(key: string, behavior)
 		behavior = behavior or "unordered" :: behavior,
 	}
 
-	local pending: { { any } } = {}
-	task.spawn(function()
-		id = efficient_pack_int.unpack(identifier_create("event", key, true), true)
-		stored_bridges[id + 1] = self
-
-		for _, packet in pending do
-			(self :: any):fire_server(unpack(packet))
-		end
-	end)
+	stored_bridges[id + 1] = self
 
 	function self:fire_server(...)
-		-- delay the packet
-		if id == -1 then
-			table.insert(pending, { ... })
-			return
-		end
-
 		local packet = pack_packet(...)
 
 		network_queue.client_send_packet(self.behavior, id, packet)
@@ -75,7 +61,7 @@ local function create_client_bridge<T...>(key: string, behavior)
 end
 
 local cached = {}
-return function<T...>(key, behavior, runtime: ((...any) -> (true, T...) | false)?)
+return function<T...>(key, behavior, runtime: ((...any) -> (true, T...) | false)?): typeof(create_client_bridge())
 	if cached[key] then
 		assert(
 			cached[key].behavior == behavior or behavior == nil,

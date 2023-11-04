@@ -48,6 +48,7 @@ end
 
 function signal.wait<T...>(self: Signal<T...>)
 	local thread = coroutine.running()
+
 	local connection = self:connect(function(...)
 		coroutine.resume(thread, ...)
 	end)

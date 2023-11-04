@@ -86,7 +86,6 @@ end
 
 local function replicate_value(namespace_key: string, id: number, value: any)
 	get_remote()
-
 	remote_new:FireAllClients(namespace_key, efficient_pack_int.pack(id, true), value)
 end
 
@@ -114,8 +113,9 @@ local function identifier_create(namespace_key: string, value: any, yield: boole
 	-- special value, this is only used inside client_event_bridge
 	namespace.yielding[value] = namespace.yielding[value] or {}
 	table.insert(namespace.yielding[value], coroutine.running())
+	local id = coroutine.yield()
 
-	return coroutine.yield()
+	return id
 end
 
 get_remote()

@@ -27,7 +27,7 @@ local function pack_packet(...)
 	end
 end
 
-local function create_server_bridge<T...>(key, behavior: behavior, runtime: ((T...) -> boolean)?)
+local function create_server_bridge<T...>(key, behavior: behavior?, runtime: ((T...) -> boolean)?)
 	local id = efficient_pack_int.unpack(identifier_create("event", key), true)
 	local signal: Signal<(Player, T...)>, fire = signal()
 	local typeguard = runtime or function()
@@ -36,6 +36,7 @@ local function create_server_bridge<T...>(key, behavior: behavior, runtime: ((T.
 
 	local self = {
 
+		key = key,
 		id = id,
 		on_server_event = signal,
 		behavior = behavior or "unordered" :: behavior,
@@ -72,7 +73,7 @@ local function create_server_bridge<T...>(key, behavior: behavior, runtime: ((T.
 end
 
 local cached = {}
-return function<T...>(key, behavior, runtime: ((...any) -> (true, T...) | false)?)
+return function<T...>(key, behavior, runtime: ((...any) -> (true, T...) | false)?): typeof(create_server_bridge())
 	if cached[key] then
 		assert(
 			cached[key].behavior == behavior or behavior == nil,

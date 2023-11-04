@@ -200,11 +200,11 @@ TEST("Unreliable Events", function()
 		CASE("Remotes receive and send packets")
 		local event = cheapnet.event(8)
 
-		quick_remotes.get_remote_event("event").OnServerEvent:Wait()
+		quick_remotes.get_remote_event("unre").OnServerEvent:Wait()
 		event:fire_clients(true):all()
 		CHECK(true)
 
-		quick_remotes.get_remote_event("event"):FireClient(filterable():all():list()[1])
+		quick_remotes.get_remote_event("unre"):FireClient(filterable():all():list()[1])
 		local plr, a = event.on_server_event:wait()
 		CHECK(plr:IsA("Player") and a == true)
 	end
@@ -212,7 +212,7 @@ TEST("Unreliable Events", function()
 	do
 		CASE("Remotes respect nil values")
 		local event = cheapnet.event(9)
-		quick_remotes.get_remote_event("event").OnServerEvent:Wait()
+		quick_remotes.get_remote_event("unre").OnServerEvent:Wait()
 		event:fire_clients(true, nil, false):all()
 		local _, a, b, c = event.on_server_event:wait()
 
@@ -309,6 +309,15 @@ TEST("Ordered Events 16bit", function()
 		CHECK(order[3] == 1)
 		CHECK(order[4] == 3)
 	end
+end)
+
+local func = cheapnet.r_function("func")
+func.on_invoke = function(player, n)
+	return n == 4, "yay!"
+end
+
+cheapnet.player_warning:connect(function(...)
+	warn(...)
 end)
 
 FINISH()
