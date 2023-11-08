@@ -22,6 +22,10 @@ local function set_timestamp(timestamp: number)
 	stored = timestamp
 end
 
+for _, player: Player in Players:GetPlayers() do
+	add_timestamp(player)
+end
+
 Players.PlayerAdded:Connect(add_timestamp)
 Players.PlayerRemoving:Connect(remove_timestamp)
 
