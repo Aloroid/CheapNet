@@ -14,10 +14,25 @@ local unordered_queue = {}
 local unreliable_queue = {}
 
 local remote_reliable
-local remote_unreliable
 
-local can_create_unreliable, r: any = pcall(Instance.new, "UnreliableRemoteEvent")
-local can_use_unreliable = pcall(if RunService:IsServer() then r.FireAllClients else r.FireServer, r)
+local unreliable_remotes = {}
+local function get_unreliable_event(key: string | number): UnreliableRemoteEvent
+	local remote = unreliable_remotes[key]
+
+	if not remote then
+		if RunService:IsServer() then
+			remote = Instance.new("UnreliableRemoteEvent")
+			remote.Name = key
+			remote.Parent = script
+		else
+			remote = script:WaitForChild(tostring(key)) :: UnreliableRemoteEvent
+		end
+
+		unreliable_remotes[key] = remote
+	end
+
+	return remote
+end
 
 do
 	if RunService:IsServer() then
@@ -25,20 +40,8 @@ do
 		remote_reliable = (script:FindFirstChild("PacketReliable") :: RemoteEvent) or Instance.new("RemoteEvent")
 		remote_reliable.Name = "PacketReliable"
 		remote_reliable.Parent = script
-
-		if can_create_unreliable and can_use_unreliable then
-			remote_unreliable = Instance.new("UnreliableRemoteEvent" :: any) :: RemoteEvent
-			remote_unreliable.Name = "PacketUnreliable"
-			remote_unreliable.Parent = script
-		else
-			remote_unreliable = Instance.new("RemoteEvent" :: any) :: RemoteEvent
-			remote_unreliable.Name = "PacketUnreliable"
-			remote_unreliable.Parent = script
-			warn("Unreliable remotes are not yet rolled out. Switched to reliable remotes")
-		end
 	else
 		remote_reliable = script:WaitForChild("PacketReliable") :: RemoteEvent
-		remote_unreliable = script:WaitForChild("PacketUnreliable") :: RemoteEvent
 	end
 end
 
@@ -151,11 +154,10 @@ local function server_empty_queue()
 	end
 
 	for id, packets in unreliable_queue do
+		local remote = get_unreliable_event(id)
 		for _, packet in packets do
 			for _, player in packet.filter:list() do
-				local queue = players[player] or { {}, {}, {} }
-				packet_encoder.add_packet_to_queue(queue[3], "unordered", id, packet.packet)
-				players[player] = queue
+				remote:FireClient(player, packet.packet)
 			end
 		end
 	end
@@ -166,7 +168,7 @@ local function server_empty_queue()
 			workspace:GetServerTimeNow(),
 			packet_encoder.get_packet(packets[1], packets[2])
 		)
-		remote_unreliable:FireClient(player, workspace:GetServerTimeNow(), packet_encoder.get_packet({}, packets[3]))
+		--remote_unreliable:FireClient(player, workspace:GetServerTimeNow(), )
 	end
 
 	table.clear(ordered_queue)
@@ -177,11 +179,15 @@ end
 
 local function client_empty_queue()
 	debug.profilebegin("empty client network queue")
-	local packet = packet_encoder.get_packet(ordered_queue, unordered_queue)
-	local unreliable = packet_encoder.get_packet({}, unreliable_queue)
 
-	remote_reliable:FireServer(workspace:GetServerTimeNow(), packet)
-	remote_unreliable:FireServer(workspace:GetServerTimeNow(), unreliable)
+	remote_reliable:FireServer(workspace:GetServerTimeNow(), packet_encoder.get_packet(ordered_queue, unordered_queue))
+
+	for id, packets in unreliable_queue do
+		local remote = get_unreliable_event(id)
+		for _, packet in packets do
+			remote:FireServer(packet.packet)
+		end
+	end
 
 	table.clear(ordered_queue)
 	table.clear(unordered_queue)
@@ -204,15 +210,8 @@ if RunService:IsServer() then
 		stored_timestamps[player] = timestamp
 		server_receive_packet(player, timestamp, ...)
 	end)
-	remote_unreliable.OnServerEvent:Connect(function(player, timestamp, ...)
-		-- the player timestamp can never be later than the server
-		if timestamp > workspace:GetServerTimeNow() then
-			timestamps.invalid_timestamp:fire(player, "INVALID_TIMESTAMP")
-			return
-		end
 
-		server_receive_packet(player, timestamp, ...)
-	end)
+	local function remote_added() end
 elseif RunService:IsClient() then
 	RunService.Heartbeat:Connect(client_empty_queue)
 	remote_reliable.OnClientEvent:Connect(client_receive_packet)

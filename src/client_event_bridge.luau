@@ -6,7 +6,7 @@ local stored_bridges = require(script.Parent.stored_bridges)
 local timestamps = require(script.Parent.timestamps)
 
 type Signal<T...> = signal.Signal<T...>
-type behavior = "ordered" | "unordered" | "unreliable" | "unreliable_drop_old_packets"
+type behavior = "ordered" | "unordered" | "unreliable"
 
 local function unpack_packet(packet: any)
 	if type(packet) == "table" then
@@ -45,13 +45,7 @@ local function create_client_bridge<T...>(key, behavior: behavior?)
 		network_queue.client_send_packet(self.behavior, id, packet)
 	end
 
-	local latest = 0
 	function self:_receive_packet(timestamp: number, packet: any)
-		if behavior == "unreliable_drop_old_packets" then
-			if latest > timestamp then return end
-			latest = timestamp
-		end
-
 		timestamps.set_timestamp(timestamp)
 		fire(unpack_packet(packet))
 		timestamps.set_timestamp(0)

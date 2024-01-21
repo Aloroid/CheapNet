@@ -7,7 +7,7 @@ local stored_bridges = require(script.Parent.stored_bridges)
 local timestamps = require(script.Parent.timestamps)
 
 type Signal<T...> = signal.Signal<T...>
-type behavior = "ordered" | "unordered" | "unreliable" | "unreliable_drop_old_packets"
+type behavior = "ordered" | "unordered" | "unreliable"
 
 local function unpack_packet(packet: any)
 	if type(packet) == "table" then
@@ -55,14 +55,9 @@ local function create_server_bridge<T...>(key, behavior: behavior?, runtime: ((T
 		return filter
 	end
 
-	local latest = 0
 	function self:_receive_packet(player: Player, timestamp: number, packet: any)
 		local s, ok = pcall(typeguard, unpack_packet(packet))
 		if not s and ok == true then return end
-		if behavior == "unreliable_drop_old_packets" then
-			if latest > timestamp then return end
-			latest = timestamp
-		end
 
 		timestamps.set_timestamp(timestamp)
 		fire(player, unpack_packet(packet))
